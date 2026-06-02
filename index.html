@@ -959,7 +959,8 @@
     .toast {
       position: fixed;
       bottom: 24px;
-      right: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
       background: var(--black3);
       border: 1px solid rgba(255, 214, 0, 0.3);
       color: var(--yellow);
@@ -968,14 +969,16 @@
       font-size: 13px;
       font-weight: 600;
       z-index: 9999;
-      transform: translateY(80px);
       opacity: 0;
       transition: all 0.3s;
-      max-width: 320px;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
     }
 
     .toast.show {
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
 
@@ -1031,6 +1034,305 @@
       .api-bar input {
         min-width: 0;
       }
+    }
+
+    /* ============================================================
+       API Key Console Styling
+    ============================================================ */
+    .api-console-widget {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 9999;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .widget-pill {
+      background: rgba(17, 17, 17, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 214, 0, 0.25);
+      border-radius: 30px;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+
+    .widget-pill:hover {
+      border-color: var(--yellow);
+      background: rgba(26, 26, 26, 0.95);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 214, 0, 0.15);
+    }
+
+    .widget-status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gray2);
+    }
+
+    .widget-status-dot.active {
+      background: var(--real);
+      box-shadow: 0 0 10px var(--real);
+      animation: pulse-green 2s infinite;
+    }
+
+    .widget-status-dot.all-exhausted {
+      background: var(--fake);
+      box-shadow: 0 0 10px var(--fake);
+      animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(0, 230, 118, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+    }
+
+    @keyframes pulse-red {
+      0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 23, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+    }
+
+    .widget-text {
+      font-size: 13px;
+      font-weight: 550;
+      letter-spacing: 0.5px;
+    }
+
+    .widget-text strong {
+      color: var(--yellow);
+    }
+
+    .widget-arrow {
+      font-size: 10px;
+      color: var(--gray2);
+      transition: transform 0.3s;
+    }
+
+    /* Console Panel */
+    .console-panel {
+      position: absolute;
+      bottom: 50px;
+      left: 0;
+      width: 320px;
+      background: rgba(11, 11, 11, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.9) translateY(10px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: bottom left;
+    }
+
+    .api-console-widget.open .console-panel {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .api-console-widget.open .widget-arrow {
+      transform: rotate(180deg);
+    }
+
+    .console-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 214, 0, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(20, 20, 20, 0.6);
+    }
+
+    .console-header h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 1.5px;
+      color: var(--yellow);
+      margin: 0;
+    }
+
+    .console-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--gray2);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .console-close-btn:hover {
+      color: var(--white);
+    }
+
+    .console-body {
+      padding: 16px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .console-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--black4);
+      padding-bottom: 14px;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sum-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--gray2);
+      text-transform: uppercase;
+    }
+
+    .sum-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      color: var(--white);
+    }
+
+    #consoleTotalCredits {
+      color: var(--yellow);
+    }
+
+    .console-keys {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .console-key-item {
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--black4);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .console-key-item.current {
+      background: rgba(255, 214, 0, 0.04);
+      border-color: rgba(255, 214, 0, 0.25);
+    }
+
+    .console-key-item.exhausted {
+      background: rgba(255, 23, 68, 0.02);
+      border-color: rgba(255, 23, 68, 0.15);
+      opacity: 0.8;
+    }
+
+    .console-key-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .key-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .key-masked {
+      font-size: 10px;
+      color: var(--gray2);
+      font-family: monospace;
+    }
+
+    .key-status {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .status-ready {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+    }
+
+    .status-active {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--real);
+    }
+
+    .status-exhausted {
+      background: rgba(255, 23, 68, 0.15);
+      color: var(--fake);
+    }
+
+    .console-bar-wrap {
+      height: 4px;
+      background: var(--black4);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .console-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .console-key-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--gray2);
+    }
+
+    .console-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--black4);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: var(--gray2);
+      background: rgba(15, 15, 15, 0.8);
+    }
+
+    .console-reset-btn {
+      background: transparent;
+      border: 1px solid var(--gray);
+      color: var(--gray2);
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 9px;
+      font-family: 'Space Grotesk', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .console-reset-btn:hover {
+      border-color: var(--yellow);
+      color: var(--yellow);
+      background: rgba(255, 214, 0, 0.05);
     }
   </style>
 </head>
@@ -1192,6 +1494,44 @@
     </div>
   </footer>
 
+  <!-- API CREDITS MONITORING CONSOLE -->
+  <div class="api-console-widget" id="apiConsoleWidget">
+    <div class="widget-pill" onclick="toggleConsole(event)">
+      <div class="widget-status-dot active" id="widgetStatusDot"></div>
+      <span class="widget-text">⚡ API Credits: <strong id="widgetCreditsBadge">800 Credits</strong></span>
+      <span class="widget-arrow">▲</span>
+    </div>
+    
+    <div class="console-panel" id="consolePanel">
+      <div class="console-header">
+        <h3>API ROTATION SYSTEM</h3>
+        <button class="console-close-btn" onclick="toggleConsole(event)">&times;</button>
+      </div>
+      
+      <div class="console-body">
+        <div class="console-summary">
+          <div class="summary-item">
+            <span class="sum-label">TOTAL CREDITS LEFT</span>
+            <span class="sum-val" id="consoleTotalCredits">800 / 800</span>
+          </div>
+          <div class="summary-item">
+            <span class="sum-label">RESET TIME</span>
+            <span class="sum-val">Midnight (Daily)</span>
+          </div>
+        </div>
+        
+        <div class="console-keys" id="consoleKeyList">
+          <!-- Populated by JavaScript dynamically -->
+        </div>
+      </div>
+      
+      <div class="console-footer">
+        <span>NewsData.io • 10 articles/credit</span>
+        <button class="console-reset-btn" onclick="resetCreditsManual()">Reset Usage</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -1234,21 +1574,52 @@
     ];
     const CREDITS_PER_REFRESH = 5; // 4 Indian + 1 intl = 5 calls max per refresh
 
-    // Persist key usage in localStorage
+    // Persist key usage in localStorage with dated schema for automatic daily reset
     function loadKeyState() {
       try {
-        const saved = JSON.parse(localStorage.getItem('tl_key_state') || '[]');
-        saved.forEach((s, i) => {
-          if (API_KEYS[i]) {
-            API_KEYS[i].used = s.used || 0;
-            API_KEYS[i].exhausted = s.exhausted || false;
-          }
-        });
-      } catch (e) { }
+        const savedData = JSON.parse(localStorage.getItem('tl_key_state_v2') || '{}');
+        const todayStr = new Date().toDateString();
+        
+        if (savedData.date !== todayStr) {
+          // New day detected: reset all keys to 0 credits used
+          API_KEYS.forEach(k => {
+            k.used = 0;
+            k.exhausted = false;
+          });
+          saveKeyState();
+        } else {
+          // Same day: restore key usage
+          const keysState = savedData.keys || [];
+          keysState.forEach((s, i) => {
+            if (API_KEYS[i]) {
+              API_KEYS[i].used = s.used ?? 0;
+              API_KEYS[i].exhausted = s.exhausted ?? false;
+            }
+          });
+        }
+      } catch (e) {
+        // Fallback to legacy state format if V2 isn't present
+        try {
+          const savedLegacy = JSON.parse(localStorage.getItem('tl_key_state') || '[]');
+          savedLegacy.forEach((s, i) => {
+            if (API_KEYS[i]) {
+              API_KEYS[i].used = s.used || 0;
+              API_KEYS[i].exhausted = s.exhausted || false;
+            }
+          });
+        } catch (err) {}
+      }
+      updateConsoleUI();
     }
 
     function saveKeyState() {
-      localStorage.setItem('tl_key_state', JSON.stringify(API_KEYS.map(k => ({ used: k.used, exhausted: k.exhausted }))));
+      const todayStr = new Date().toDateString();
+      const state = {
+        date: todayStr,
+        keys: API_KEYS.map(k => ({ used: k.used, exhausted: k.exhausted }))
+      };
+      localStorage.setItem('tl_key_state_v2', JSON.stringify(state));
+      updateConsoleUI();
     }
 
     function getActiveKey() {
@@ -1263,6 +1634,98 @@
         showToast(`🔄 Key ${idx + 1} exhausted — switching to Key ${idx + 2}`);
       }
       saveKeyState();
+    }
+
+    /* ── API CONSOLE BINDINGS ────────────────────────────────── */
+    function toggleConsole(event) {
+      if (event) event.stopPropagation();
+      const widget = document.getElementById('apiConsoleWidget');
+      if (widget) {
+        widget.classList.toggle('open');
+      }
+    }
+
+    // Close console when clicking anywhere outside
+    document.addEventListener('click', (e) => {
+      const widget = document.getElementById('apiConsoleWidget');
+      if (widget && widget.classList.contains('open') && !widget.contains(e.target)) {
+        widget.classList.remove('open');
+      }
+    });
+
+    function updateConsoleUI() {
+      const activeKey = getActiveKey();
+      const activeIdx = activeKey ? API_KEYS.indexOf(activeKey) : -1;
+      
+      const listEl = document.getElementById('consoleKeyList');
+      if (!listEl) return;
+      
+      let totalUsed = 0;
+      
+      listEl.innerHTML = API_KEYS.map((k, idx) => {
+        totalUsed += k.used;
+        const isCurrent = idx === activeIdx;
+        const pct = Math.min(100, Math.round((k.used / k.limit) * 100));
+        
+        let statusText = 'Ready';
+        let statusClass = 'status-ready';
+        if (k.exhausted || k.used >= k.limit) {
+          statusText = 'Exhausted';
+          statusClass = 'status-exhausted';
+        } else if (isCurrent) {
+          statusText = 'Active';
+          statusClass = 'status-active';
+        }
+        
+        // Hide actual key string partially for safety
+        const maskedKey = k.key.substring(0, 6) + '...' + k.key.substring(k.key.length - 4);
+        
+        return `
+          <div class="console-key-item ${isCurrent ? 'current' : ''} ${k.exhausted ? 'exhausted' : ''}">
+            <div class="console-key-header">
+              <span class="key-name">Key ${idx + 1} <span class="key-masked">(${maskedKey})</span></span>
+              <span class="key-status ${statusClass}">${statusText}</span>
+            </div>
+            <div class="console-bar-wrap">
+              <div class="console-bar-fill" style="width: ${pct}%; background: ${k.exhausted ? 'var(--fake)' : 'var(--yellow)'}"></div>
+            </div>
+            <div class="console-key-footer">
+              <span>Used: ${k.used} / ${k.limit} credits</span>
+              <span>10 articles / credit</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      const totalRemaining = 800 - totalUsed;
+      
+      const totalCreditsEl = document.getElementById('consoleTotalCredits');
+      if (totalCreditsEl) totalCreditsEl.textContent = `${totalRemaining} / 800`;
+      
+      const badgeEl = document.getElementById('widgetCreditsBadge');
+      if (badgeEl) {
+        badgeEl.textContent = `${totalRemaining} Credits`;
+      }
+      
+      // Update badge indicator class
+      const dotEl = document.getElementById('widgetStatusDot');
+      if (dotEl) {
+        dotEl.className = 'widget-status-dot';
+        if (totalRemaining === 0) {
+          dotEl.classList.add('all-exhausted');
+        } else if (activeKey) {
+          dotEl.classList.add('active');
+        }
+      }
+    }
+
+    function resetCreditsManual() {
+      API_KEYS.forEach(k => {
+        k.used = 0;
+        k.exhausted = false;
+      });
+      saveKeyState();
+      showToast("🔄 API credit consumption has been reset manually.");
     }
 
     /* ── TIME HELPER ─────────────────────────────────────────── */
@@ -1332,28 +1795,71 @@
     /* ── FETCH NEWS FROM NEWSDATA.IO DIRECTLY ────────────────── */
     const seenLinks = new Set();
 
-    async function fetchOneCreditCall(keyObj, cat, country) {
-      const params = new URLSearchParams({ apikey: keyObj.key, language: 'en', category: cat, size: 10 });
-      if (country) params.set('country', country);
-      const res = await fetch(`${NEWS_BASE_URL}?${params}`);
-      consumeCredit(keyObj); // count the call
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = err.results?.message || `HTTP ${res.status}`;
-        if (res.status === 401 || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('apikey')) {
-          keyObj.exhausted = true; saveKeyState();
+    async function fetchWithKeyRotation(cat, country) {
+      while (true) {
+        const keyObj = getActiveKey();
+        if (!keyObj) {
+          throw new Error('All 4 API keys are fully exhausted for today (800/800 credits consumed).');
         }
-        throw new Error(msg);
-      }
-      const data = await res.json();
-      if (data.status !== 'success') {
-        const msg = data.results?.message || 'API error';
-        if (msg.toLowerCase().includes('credit') || msg.toLowerCase().includes('limit')) {
-          keyObj.exhausted = true; saveKeyState();
+        
+        try {
+          const params = new URLSearchParams({ apikey: keyObj.key, language: 'en', category: cat, size: 10 });
+          if (country) params.set('country', country);
+          
+          const res = await fetch(`${NEWS_BASE_URL}?${params}`);
+          
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const msg = err.results?.message || `HTTP ${res.status}`;
+            const lowerMsg = msg.toLowerCase();
+            
+            // Check if key is invalid, rate limited, or exhausted
+            if (res.status === 401 || res.status === 429 || lowerMsg.includes('invalid') || lowerMsg.includes('apikey') || lowerMsg.includes('credit') || lowerMsg.includes('limit')) {
+              keyObj.exhausted = true;
+              saveKeyState();
+              const idx = API_KEYS.indexOf(keyObj);
+              showToast(`🔄 Key ${idx + 1} exhausted/invalid — rotating to Key ${idx + 2}`);
+              continue; // try next key
+            }
+            throw new Error(msg);
+          }
+          
+          const data = await res.json();
+          if (data.status !== 'success') {
+            const msg = data.results?.message || 'API error';
+            const lowerMsg = msg.toLowerCase();
+            
+            if (lowerMsg.includes('credit') || lowerMsg.includes('limit') || lowerMsg.includes('apikey')) {
+              keyObj.exhausted = true;
+              saveKeyState();
+              const idx = API_KEYS.indexOf(keyObj);
+              showToast(`🔄 Key ${idx + 1} exhausted/invalid — rotating to Key ${idx + 2}`);
+              continue; // try next key
+            }
+            throw new Error(msg);
+          }
+          
+          // Successfully fetched! Increment usage & save
+          consumeCredit(keyObj);
+          return (data.results || []).map((a, i) => mapArticle(a, cat, i));
+          
+        } catch (err) {
+          if (err.message.includes('fully exhausted')) {
+            throw err;
+          }
+          
+          const lowerErr = err.message.toLowerCase();
+          if (lowerErr.includes('credit') || lowerErr.includes('limit') || lowerErr.includes('apikey') || lowerErr.includes('401') || lowerErr.includes('429')) {
+            keyObj.exhausted = true;
+            saveKeyState();
+            const idx = API_KEYS.indexOf(keyObj);
+            showToast(`🔄 Key ${idx + 1} exhausted/invalid — rotating to Key ${idx + 2}`);
+            continue; // try next key
+          }
+          
+          throw err; // throw standard errors (e.g. offline/network)
         }
-        throw new Error(msg);
       }
-      return (data.results || []).map((a, i) => mapArticle(a, cat, i));
     }
 
     const INDIAN_CATEGORIES = ['politics', 'sports', 'health', 'technology', 'business', 'entertainment', 'science', 'world', 'top'];
@@ -1361,10 +1867,9 @@
     async function fetchAllNews(silent = false) {
       if (isLoading) return;
 
-      let keyObj = getActiveKey();
-      if (!keyObj) {
+      if (!getActiveKey()) {
         if (!silent) {
-          showFeaturedMsg(`<strong style="color:var(--fake)">All API keys exhausted (800/800 credits used).</strong><br>Total of 800 credits across 4 keys have been consumed.`, true);
+          showFeaturedMsg(`<strong style="color:var(--fake)">All API keys exhausted (800/800 credits used today).</strong><br>The 800 total credits across 4 keys have been consumed. Credits will reset at midnight automatically.`, true);
         } else {
           showToast("⚠️ API key limit reached. Showing cached/fallback news.");
         }
@@ -1390,10 +1895,9 @@
       const shuffledCats = [...INDIAN_CATEGORIES].sort(() => Math.random() - 0.5);
       for (const cat of shuffledCats) {
         if (creditsUsed >= 4) break;
-        keyObj = getActiveKey();
-        if (!keyObj) break;
+        if (!getActiveKey()) break;
         try {
-          const articles = await fetchOneCreditCall(keyObj, cat, 'in');
+          const articles = await fetchWithKeyRotation(cat, 'in');
           creditsUsed++;
           for (const a of articles) {
             const linkKey = a.link || a.title;
@@ -1405,16 +1909,14 @@
           }
         } catch (err) {
           if (!firstError) firstError = err.message;
-          keyObj = getActiveKey();
-          if (!keyObj) break;
+          if (!getActiveKey()) break;
         }
       }
 
       // ── 1 International call ─────────────────────────────────
-      keyObj = getActiveKey();
-      if (keyObj && creditsUsed < CREDITS_PER_REFRESH) {
+      if (getActiveKey() && creditsUsed < CREDITS_PER_REFRESH) {
         try {
-          const articles = await fetchOneCreditCall(keyObj, 'world', '');
+          const articles = await fetchWithKeyRotation('world', '');
           creditsUsed++;
           const intlMax = Math.max(2, Math.round(results.length * 0.12));
           let intlCount = 0;
@@ -1447,10 +1949,12 @@
         updateTickers();
         displayedCount = 0;
         await renderArticles();
+        const totalUsed = API_KEYS.reduce((sum, k) => sum + k.used, 0);
+        const remaining = 800 - totalUsed;
         if (!silent) {
-          showToast(`✅ ${results.length} articles loaded · ${creditsUsed} credits used`);
+          showToast(`✅ ${results.length} articles loaded · ${creditsUsed} credits used · ${remaining} credits left today`);
         } else {
-          showToast(`🔄 ${results.length} new articles`);
+          showToast(`🔄 ${results.length} new articles · ${remaining} credits left`);
         }
         updateStats();
       }

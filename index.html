@@ -1728,10 +1728,40 @@
       showToast("🔄 API credit consumption has been reset manually.");
     }
 
+    /* ── SECURITY HELPERS ────────────────────────────────────── */
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeUrl(url) {
+      if (!url) return '';
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          return url;
+        }
+      } catch (e) {}
+      return '#';
+    }
+
     /* ── TIME HELPER ─────────────────────────────────────────── */
     function timeAgo(dateStr) {
       if (!dateStr) return 'Recently';
-      const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
+      let d = new Date(dateStr);
+      if (isNaN(d.getTime())) {
+        d = new Date(dateStr.replace(' ', 'T'));
+      }
+      if (isNaN(d.getTime())) {
+        return 'Recently';
+      }
+      const seconds = Math.floor((new Date() - d) / 1000);
+      if (seconds < 0) return 'Just now';
       if (seconds < 60) return 'Just now';
       if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
       if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
@@ -1765,12 +1795,18 @@
     }
 
     /* ── MAP API ARTICLE → APP FORMAT ───────────────────────── */
-    function mapArticle(a, apiCat, index) {
+    function mapArticle(a, apiCat, index, isIndia = false) {
       const score = scoreArticle(a);
       const cat = detectCategory(a, apiCat);
       const titleText = (a.title || 'No title').replace(/\s*-\s*[^-]+$/, '');
       const excerptText = a.description || 'No description available.';
       const articleText = a.content || a.description || 'Full content not available.';
+
+      let parsedDate = new Date(a.pubDate);
+      if (isNaN(parsedDate.getTime()) && a.pubDate) {
+        parsedDate = new Date(a.pubDate.replace(' ', 'T'));
+      }
+      const timestamp = isNaN(parsedDate.getTime()) ? Date.now() : parsedDate.getTime();
 
       return {
         id: _idCounter++,
@@ -1788,8 +1824,33 @@
         unclear: score.unclear,
         unverified: score.unverified,
         verdict: score.verdict,
-        sources: [{ n: a.source_id || 'Source', v: score.verdict === 'real' }]
+        sources: [{ n: a.source_id || 'Source', v: score.verdict === 'real' }],
+        isIndia,
+        timestamp: timestamp
       };
+    }
+
+    function balanceNewsRatio(articles) {
+      const india = articles.filter(a => a.isIndia);
+      const intl = articles.filter(a => !a.isIndia);
+      
+      india.sort((a, b) => b.timestamp - a.timestamp);
+      intl.sort((a, b) => b.timestamp - a.timestamp);
+      
+      const N = Math.min(intl.length, Math.floor(india.length / 4));
+      
+      // If we don't have enough articles of both types to balance cleanly,
+      // or if balancing would discard too many articles (e.g. keeping less than 20),
+      // we just return all articles sorted by time.
+      if (N === 0 || (india.length + intl.length > 20 && (N * 5) < 20)) {
+        articles.sort((a, b) => b.timestamp - a.timestamp);
+        return articles;
+      }
+      
+      const indiaCount = N * 4;
+      const balanced = [...india.slice(0, indiaCount), ...intl.slice(0, N)];
+      balanced.sort((a, b) => b.timestamp - a.timestamp);
+      return balanced;
     }
 
     /* ── FETCH NEWS FROM NEWSDATA.IO DIRECTLY ────────────────── */
@@ -1841,7 +1902,7 @@
           
           // Successfully fetched! Increment usage & save
           consumeCredit(keyObj);
-          return (data.results || []).map((a, i) => mapArticle(a, cat, i));
+          return (data.results || []).map((a, i) => mapArticle(a, cat, i, country === 'in'));
           
         } catch (err) {
           if (err.message.includes('fully exhausted')) {
@@ -1918,16 +1979,12 @@
         try {
           const articles = await fetchWithKeyRotation('world', '');
           creditsUsed++;
-          const intlMax = Math.max(2, Math.round(results.length * 0.12));
-          let intlCount = 0;
           for (const a of articles) {
-            if (intlCount >= intlMax) break;
             const linkKey = a.link || a.title;
             if (!seenTitles.has(a.title) && !seenLinks.has(linkKey)) {
               seenTitles.add(a.title);
               seenLinks.add(linkKey);
               results.push(a);
-              intlCount++;
             }
           }
         } catch (e) { }
@@ -1945,16 +2002,16 @@
       }
 
       if (results.length > 0) {
-        allFetched = [...results, ...allFetched];
+        allFetched = balanceNewsRatio([...results, ...allFetched]);
         updateTickers();
         displayedCount = 0;
         await renderArticles();
         const totalUsed = API_KEYS.reduce((sum, k) => sum + k.used, 0);
         const remaining = 800 - totalUsed;
         if (!silent) {
-          showToast(`✅ ${results.length} articles loaded · ${creditsUsed} credits used · ${remaining} credits left today`);
+          showToast(`✅ Articles updated · ${creditsUsed} credits used · ${remaining} credits left today`);
         } else {
-          showToast(`🔄 ${results.length} new articles · ${remaining} credits left`);
+          showToast(`🔄 Articles updated · ${remaining} credits left`);
         }
         updateStats();
       }
@@ -2010,29 +2067,32 @@
       const vLabel = VERDICT_LABELS[a.verdict];
       const icon = CATEGORY_ICONS[a.cat] || '📰';
 
-      const imgHtml = a.img
-        ? `<img class="card-img" src="${a.img}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'placeholder-icon\\'>${icon}</div>'">`
-        : `<div class="placeholder-icon">${icon}</div>`;
+      const sanitizedImg = sanitizeUrl(a.img);
+      const imgHtml = sanitizedImg
+        ? `<img class="card-img" src="${escapeHTML(sanitizedImg)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'placeholder-icon\\'>${escapeHTML(icon)}</div>'">`
+        : `<div class="placeholder-icon">${escapeHTML(icon)}</div>`;
+
+      const sanitizedLink = sanitizeUrl(a.link);
 
       return `
   <div class="news-card" onclick="openModal(${a.id})">
     <div class="card-img-placeholder">${imgHtml}</div>
     <div class="card-body">
       <div class="card-meta">
-        <span class="cat-tag">${a.cat.toUpperCase()}</span>
-        <span class="source-tag">${a.source}</span>
-        <span class="time-tag">${a.time}</span>
+        <span class="cat-tag">${escapeHTML(a.cat.toUpperCase())}</span>
+        <span class="source-tag">${escapeHTML(a.source)}</span>
+        <span class="time-tag">${escapeHTML(a.time)}</span>
       </div>
-      <div class="card-title ${isFeatured ? 'featured' : ''}">${a.title}</div>
-      <div class="card-excerpt">${a.excerpt}</div>
-      ${a.link ? `<a class="card-read-link" href="${a.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Read full article ↗</a>` : ''}
+      <div class="card-title ${isFeatured ? 'featured' : ''}">${escapeHTML(a.title)}</div>
+      <div class="card-excerpt">${escapeHTML(a.excerpt)}</div>
+      ${sanitizedLink && sanitizedLink !== '#' ? `<a class="card-read-link" href="${escapeHTML(sanitizedLink)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Read full article ↗</a>` : ''}
     </div>
     <div class="verdict-section">
       <div class="verdict-label">AI Verdict</div>
       <div class="verdict-bars">
         ${['real', 'fake', 'unclear', 'unverified'].map(k => `
         <div class="verdict-row">
-          <span class="verdict-name" style="color:var(--${k})">${BAR_LABELS[k]}</span>
+          <span class="verdict-name" style="color:var(--${k})">${escapeHTML(BAR_LABELS[k])}</span>
           <div class="verdict-bar-wrap"><div class="verdict-bar-fill" style="width:0%;background:var(--${k})" data-target="${a[k]}"></div></div>
           <span class="verdict-pct" style="color:var(--${k})">${a[k]}%</span>
         </div>`).join('')}
@@ -2284,12 +2344,12 @@
       const list2 = oddArticles.length ? oddArticles : evenArticles;
 
       const items1 = [...evenArticles, ...evenArticles].map(a => {
-        return `<span class="ticker-item"><span class="ticker-dot"></span> ${a.title}</span>`;
+        return `<span class="ticker-item"><span class="ticker-dot"></span> ${escapeHTML(a.title)}</span>`;
       }).join('');
 
       const items2 = [...list2, ...list2].map(a => {
         const prefix = a.verdict === 'real' ? '🟢 REAL: ' : a.verdict === 'fake' ? '🔴 LIKELY FAKE: ' : '🟡 UNCLEAR: ';
-        return `<span class="ticker-item"><span class="ticker-dot"></span> ${prefix}${a.title}</span>`;
+        return `<span class="ticker-item"><span class="ticker-dot"></span> ${prefix}${escapeHTML(a.title)}</span>`;
       }).join('');
 
       const track1 = document.getElementById('tickerTrack1');
@@ -2324,146 +2384,167 @@
 
     /* ── FALLBACK MOCK NEWS ──────────────────────────────────── */
     function loadMockNews() {
+      const baseTime = Date.now();
       const mockData = [
         {
           id: _idCounter++,
           cat: 'politics',
-          title: "Global Leaders Agree on Landmark Climate Accord at UN Summit",
-          excerpt: "Delegates from over 190 nations have finalized a historic agreement aiming to reduce carbon emissions by 45% over the next decade.",
-          article: "In a historic breakthrough at the United Nations Climate Summit, representatives from 195 countries have signed the Global Green Initiative Accord. The agreement mandates legally binding targets for carbon emission reductions, aiming for a collective 45% drop by 2035. Key elements include a phased transition away from fossil fuel subsidies, a tripling of global renewable energy capacity, and a $200 billion annual fund dedicated to supporting developing nations in their transition to green technology.",
-          source: "Reuters",
-          time: "2h ago",
+          isIndia: true,
+          title: "Election Commission of India Announces Dates for General Elections Across States",
+          excerpt: "The poll body has outlined a multi-phase voting schedule to ensure smooth democratic transition for over 900 million eligible voters.",
+          article: "The Election Commission of India (ECI) has officially declared the schedule for the upcoming general elections. Voting will take place in seven phases starting next month, with results slated for announcement in June. The commission has introduced several tech-driven initiatives, including digital voter slips and real-time monitoring of polling booths, to ensure a fair and transparent voting process across all states and union territories.",
+          source: "Press Trust of India",
+          time: "1h ago",
           img: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800",
-          link: "https://www.reuters.com",
-          real: 88, fake: 4, unclear: 5, unverified: 3,
+          link: "https://www.ndtv.com",
+          real: 95, fake: 1, unclear: 2, unverified: 2,
           verdict: "real",
-          sources: [{ n: "Reuters", v: true }, { n: "Associated Press", v: true }]
+          sources: [{ n: "Press Trust of India", v: true }, { n: "ECI Official Statement", v: true }],
+          timestamp: baseTime - 1 * 60 * 60 * 1000
         },
         {
           id: _idCounter++,
           cat: 'tech',
-          title: "Quantum Computing Startup Claims Room-Temperature Qubits",
-          excerpt: "A Silicon Valley startup has demonstrated a stable 50-qubit processor operating at room temperature, potentially revolutionizing the industry.",
-          article: "In a move that has stunned the quantum physics community, startup Q-Solid has unveiled a 50-qubit quantum processor that reportedly remains stable at room temperature. Traditional quantum computers require near-absolute zero temperatures (minus 459 degrees Fahrenheit) to prevent qubits from decohering. Q-Solid's new design utilizes a novel diamond nitrogen-vacancy center architecture encapsulated in a micro-engineered silicon matrix.",
-          source: "TechCrunch",
-          time: "4h ago",
+          isIndia: false,
+          title: "Silicon Valley Startup Claims Major Breakthrough in Room-Temperature Superconductors",
+          excerpt: "Researchers report zero electrical resistance at ambient temperatures, though independent replication is still pending.",
+          article: "A tech startup based in California has released a preprint paper claiming the synthesis of a novel material that exhibits superconductivity at room temperature and normal atmospheric pressure. While similar claims in the past have been debunked, the scientific community is cautiously observing the results as peer review and independent replication studies get underway.",
+          source: "Nature Physics",
+          time: "2h ago",
           img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800",
-          link: "https://techcrunch.com",
-          real: 65, fake: 12, unclear: 15, unverified: 8,
-          verdict: "real",
-          sources: [{ n: "TechCrunch", v: true }, { n: "Nature Physics", v: true }]
-        },
-        {
-          id: _idCounter++,
-          cat: 'business',
-          title: "Federal Reserve Announces Surprise Interest Rate Cut to Stimulate Growth",
-          excerpt: "In an unexpected policy shift, the Federal Reserve has reduced its benchmark interest rate by 25 basis points citing slowing economic indicators.",
-          article: "The Federal Reserve on Tuesday announced a 0.25 percentage point reduction in its benchmark interest rate, bringing the target range to 4.75%-5.00%. The decision took market analysts by surprise, as inflation indicators had remained steady. In a press briefing, the Fed Chairman cited a cooling labor market and slowing manufacturing output as the primary drivers behind the preemptive cut.",
-          source: "Bloomberg",
-          time: "5h ago",
-          img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800",
-          link: "https://www.bloomberg.com",
-          real: 92, fake: 2, unclear: 4, unverified: 2,
-          verdict: "real",
-          sources: [{ n: "Bloomberg", v: true }, { n: "Wall Street Journal", v: true }]
-        },
-        {
-          id: _idCounter++,
-          cat: 'facts',
-          title: "Deep Ocean Expedition Discovers 50 New Marine Species in Mariana Trench",
-          excerpt: "Marine biologists aboard the research vessel Nautilus have documented previously unknown deep-sea creatures at depths of 8,000 meters.",
-          article: "A joint scientific expedition led by the Ocean Exploration Trust has returned from a three-month voyage into the Mariana Trench with evidence of at least 50 new marine species. Operating remote-controlled submersibles at depths exceeding 8,000 meters, researchers captured high-definition footage and physical specimens of unique bioluminescent organisms, glass sponges, and predatory crustaceans.",
-          source: "Nature",
-          time: "8h ago",
-          img: "https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800",
           link: "https://www.nature.com",
-          real: 90, fake: 2, unclear: 6, unverified: 2,
-          verdict: "real",
-          sources: [{ n: "Nature Journal", v: true }, { n: "National Geographic", v: true }]
+          real: 20, fake: 20, unclear: 50, unverified: 10,
+          verdict: "unclear",
+          sources: [{ n: "Nature Physics", v: true }, { n: "Independent Review", v: false }],
+          timestamp: baseTime - 2 * 60 * 60 * 1000
         },
         {
           id: _idCounter++,
-          cat: 'sports',
-          title: "Underdog Team Clinches Dramatic Victory in World Championship Finals",
-          excerpt: "A last-second goal sealed an improbable championship win, capping off one of the greatest upset stories in modern sports history.",
-          article: "In a stunning display of resilience, the underdogs captured their first-ever World Championship title in a nail-biting 3-2 victory over the defending champions. Trailing by one goal with less than five minutes remaining on the clock, the team mounted a furious comeback. A clinical equalizer in the 88th minute set up a dramatic final play, where a sensational header in stoppage time sent the stadium into panemonium.",
-          source: "ESPN",
-          time: "12h ago",
-          img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800",
-          link: "https://www.espn.com",
-          real: 85, fake: 3, unclear: 8, unverified: 4,
+          cat: 'tech',
+          isIndia: true,
+          title: "ISRO Successfully Launches Next-Gen Earth Observation Satellite from Sriharikota",
+          excerpt: "The EOS-08 satellite was injected into its precise orbit, providing high-resolution data for agriculture and disaster management.",
+          article: "The Indian Space Research Organisation (ISRO) successfully launched its next-generation Earth Observation Satellite (EOS-08) aboard the SSLV-D3 launch vehicle from the Satish Dhawan Space Centre. The satellite will provide advanced imaging capabilities, assisting in disaster monitoring, agricultural planning, and forestry management, marking another milestone for India's space program.",
+          source: "ISRO Press",
+          time: "3h ago",
+          img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800",
+          link: "https://www.isro.gov.in",
+          real: 98, fake: 0, unclear: 1, unverified: 1,
           verdict: "real",
-          sources: [{ n: "ESPN", v: true }, { n: "Sports Illustrated", v: true }]
-        },
-        {
-          id: _idCounter++,
-          cat: 'health',
-          title: "New Alzheimer's Therapy Shows Promising Results in Phase III Clinical Trials",
-          excerpt: "A novel monoclonal antibody treatment has demonstrated a 35% reduction in cognitive decline for early-stage Alzheimer's patients.",
-          article: "Pharmaceutical giant BioMed Solutions has released results from its global Phase III clinical trial of Alzene, a new therapeutic targeting amyloid-beta plaques in the brain. The study, which followed over 2,000 patients for 18 months, showed that Alzene slowed cognitive and functional decline by 35% compared to a placebo. Crucially, the treatment also demonstrated a lower incidence of brain swelling.",
-          source: "The Lancet",
-          time: "1d ago",
-          img: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800",
-          link: "https://www.thelancet.com",
-          real: 82, fake: 5, unclear: 10, unverified: 3,
-          verdict: "real",
-          sources: [{ n: "The Lancet", v: true }, { n: "New England Journal of Medicine", v: true }]
-        },
-        {
-          id: _idCounter++,
-          cat: 'entertainment',
-          title: "Independent Film Sweeps Prestigious Awards at Cannes Film Festival",
-          excerpt: "A micro-budget drama shot on 16mm film has taken home the Palme d'Or, surprising critics and major studio contenders.",
-          article: "The Cannes Film Festival concluded with a historic win as the Palme d'Or was awarded to 'Whispers of the Wind', a micro-budget drama directed by newcomer Elena Rostova. Shot entirely on location on 16mm film, the movie tells the intimate story of a fishing family dealing with shifting economic realities. Film critics praised the movie's raw emotional honesty and stunning cinematography.",
-          source: "Variety",
-          time: "2d ago",
-          img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=800",
-          link: "https://variety.com",
-          real: 95, fake: 1, unclear: 3, unverified: 1,
-          verdict: "real",
-          sources: [{ n: "Variety", v: true }, { n: "Hollywood Reporter", v: true }]
+          sources: [{ n: "ISRO Press", v: true }, { n: "DoS Bulletin", v: true }],
+          timestamp: baseTime - 3 * 60 * 60 * 1000
         },
         {
           id: _idCounter++,
           cat: 'current',
-          title: "Aviation Regulators Ground New Passenger Jet Fleet Over Sensor Issue",
-          excerpt: "Global aviation authorities have suspended operations of the AeroJet-300 following reports of erroneous altitude sensor readings.",
-          article: "The Federal Aviation Administration (FAA), in coordination with European and Asian regulators, has issued an emergency airworthiness directive grounding all AeroJet-300 commercial aircraft. The action follows three separate incidents where pilots reported receiving erroneous readings from the primary angle-of-attack sensors.",
-          source: "BBC News",
-          time: "3d ago",
+          isIndia: false,
+          title: "Global Aviation Authorities Lift Grounding Order on AeroJet Fleet After Safety Update",
+          excerpt: "FAA and European safety regulators have approved the software and sensor modifications following extensive testing.",
+          article: "After a six-month safety suspension, global aviation authorities have officially cleared the AeroJet-300 aircraft fleet to return to commercial service. The decision follows rigorous testing of a new redundant sensor configuration and flight control software update designed to prevent erroneous readings from triggering automated safety maneuvers.",
+          source: "Reuters",
+          time: "4h ago",
           img: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800",
-          link: "https://www.bbc.com",
-          real: 87, fake: 3, unclear: 7, unverified: 3,
+          link: "https://www.reuters.com",
+          real: 90, fake: 2, unclear: 5, unverified: 3,
           verdict: "real",
-          sources: [{ n: "BBC News", v: true }, { n: "FAA Press", v: true }]
+          sources: [{ n: "Reuters", v: true }, { n: "FAA Press", v: true }],
+          timestamp: baseTime - 4 * 60 * 60 * 1000
+        },
+        {
+          id: _idCounter++,
+          cat: 'business',
+          isIndia: true,
+          title: "Reserve Bank of India Keeps Repo Rate Unchanged at 6.50% Citing Inflation Control",
+          excerpt: "The Monetary Policy Committee decided to maintain the policy rate to keep inflation aligned with the medium-term target.",
+          article: "The Reserve Bank of India's (RBI) Monetary Policy Committee (MPC) has decided to keep the policy repo rate unchanged at 6.50% for the seventh consecutive meeting. RBI Governor Shaktikanta Das stated that while economic growth remains resilient, the committee remains focused on aligning inflation to the 4% target on a durable basis.",
+          source: "Economic Times",
+          time: "6h ago",
+          img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800",
+          link: "https://economictimes.indiatimes.com",
+          real: 94, fake: 1, unclear: 3, unverified: 2,
+          verdict: "real",
+          sources: [{ n: "Economic Times", v: true }, { n: "RBI Statement", v: true }],
+          timestamp: baseTime - 6 * 60 * 60 * 1000
+        },
+        {
+          id: _idCounter++,
+          cat: 'sports',
+          isIndia: true,
+          title: "India Secures Historic Gold in Badminton World Championships Final",
+          excerpt: "A stellar straight-sets victory in the final match brings the coveted title to India for the first time in this category.",
+          article: "In a spectacular display of athletic prowess, India's top-seeded player secured a historic gold medal at the Badminton World Championships. Defending champion was defeated in straight sets (21-18, 21-15) during a tense 45-minute final, drawing praise from sports enthusiasts and national leaders alike.",
+          source: "Sports Star",
+          time: "8h ago",
+          img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800",
+          link: "https://sportstar.thehindu.com",
+          real: 89, fake: 2, unclear: 6, unverified: 3,
+          verdict: "real",
+          sources: [{ n: "Sports Star", v: true }, { n: "WBF Bulletin", v: true }],
+          timestamp: baseTime - 8 * 60 * 60 * 1000
+        },
+        {
+          id: _idCounter++,
+          cat: 'facts',
+          isIndia: true,
+          title: "IIT Delhi Researchers Develop Ultra-Low-Cost Water Purification Filter Using Nanomaterials",
+          excerpt: "The new filter removes 99.9% of heavy metals and pathogens, promising clean drinking water for rural households.",
+          article: "A team of researchers at the Indian Institute of Technology (IIT) Delhi has engineered a novel water filtration system using graphene-based nanomaterials. The filter, which costs less than ₹100 to manufacture, has shown exceptional performance in removing heavy metals, chemical residues, and biological contaminants from groundwater sources in test villages.",
+          source: "Science India",
+          time: "12h ago",
+          img: "https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800",
+          link: "https://iitd.ac.in",
+          real: 87, fake: 3, unclear: 6, unverified: 4,
+          verdict: "real",
+          sources: [{ n: "Science India", v: true }, { n: "IIT Delhi Lab Report", v: true }],
+          timestamp: baseTime - 12 * 60 * 60 * 1000
+        },
+        {
+          id: _idCounter++,
+          cat: 'entertainment',
+          isIndia: true,
+          title: "Indian Director's Cinematic Masterpiece Enters Competition Section at Venice Film Festival",
+          excerpt: "The indie drama exploring rural migration will compete for the Golden Lion, a first for an Indian film in a decade.",
+          article: "Indian cinema marks a proud moment as the independent feature film 'The Whispering Hills' has been selected for the main competition section at the Venice International Film Festival. Directed by independent filmmaker Aruna Sen, the film follows a family's struggles with environmental displacement in the Western Ghats.",
+          source: "Hindustan Times",
+          time: "1d ago",
+          img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=800",
+          link: "https://www.hindustantimes.com",
+          real: 91, fake: 2, unclear: 4, unverified: 3,
+          verdict: "real",
+          sources: [{ n: "Hindustan Times", v: true }, { n: "Venice Festival Press", v: true }],
+          timestamp: baseTime - 24 * 60 * 60 * 1000
         },
         {
           id: _idCounter++,
           cat: 'politics',
-          title: "Viral Post Claims Government Implementing Mandatory Social Credit System Next Month",
-          excerpt: "A widely shared social media post alleging a new credit scoring system based on online behavior is flagged as false by authorities.",
-          article: "A viral rumor circulating on platforms like Facebook and X has claimed that a new social credit system will be implemented next month, monitoring citizens' online activities and assigning a score that determines access to public services. Fact-checkers and government spokespersons have debunked the claim, stating that no such policy exists.",
-          source: "FactCheck.org",
+          isIndia: true,
+          title: "Viral Post Claims Indian Government is Distributing Free Laptops to All Students Next Week",
+          excerpt: "The Ministry of Education has flagged the viral message as completely fraudulent, advising students not to share personal details.",
+          article: "A message widely circulating on WhatsApp and Telegram claims that the Ministry of Education is distributing free laptops to all school and college students under a new national scheme. The message includes a link to register and collect the device. However, PIB Fact Check has officially debunked the rumor, warning citizens that the link is a phishing attempt designed to steal personal information.",
+          source: "PIB Fact Check",
           time: "1d ago",
           img: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800",
-          link: "https://www.factcheck.org",
-          real: 8, fake: 82, unclear: 5, unverified: 5,
+          link: "https://pib.gov.in",
+          real: 5, fake: 90, unclear: 3, unverified: 2,
           verdict: "fake",
-          sources: [{ n: "FactCheck.org", v: true }, { n: "Dept of Justice Statement", v: false }]
+          sources: [{ n: "PIB Fact Check", v: true }, { n: "Dept of Justice Statement", v: false }],
+          timestamp: baseTime - 25 * 60 * 60 * 1000
         },
         {
           id: _idCounter++,
-          cat: 'tech',
-          title: "Leaked Document Suggests Technology Giant to Acquire Major Competitor for $100B",
-          excerpt: "Speculation rises after an anonymous document claims a massive tech merger is in the works, though both companies refuse to comment.",
-          article: "An anonymous document uploaded to a developer forum has sparked intense industry speculation about a potential $100 billion merger between two of the world's leading tech companies. The document, which appears to outline draft acquisition terms and product integration roadmaps, has not been verified by any independent sources.",
-          source: "Reuters",
+          cat: 'health',
+          isIndia: true,
+          title: "Ayush Ministry Collaborates with ICMR to Study Efficacy of Traditional Herbs on Metabolic Health",
+          excerpt: "A large-scale clinical trial will evaluate the long-term impact of customized herbal formulations alongside standard care.",
+          article: "The Ministry of Ayush and the Indian Council of Medical Research (ICMR) have announced a joint clinical study to investigate the therapeutic benefits of traditional Indian herbs in managing type-2 diabetes and metabolic syndrome. The randomized, double-blind study will monitor over 1,500 participants across multiple health centers in India.",
+          source: "The Hindu",
           time: "2d ago",
-          img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800",
-          link: "https://www.reuters.com",
-          real: 15, fake: 25, unclear: 45, unverified: 15,
-          verdict: "unclear",
-          sources: [{ n: "Tech Analyst Forum", v: false }, { n: "Company Spokesperson", v: false }]
+          img: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800",
+          link: "https://www.thehindu.com",
+          real: 84, fake: 4, unclear: 8, unverified: 4,
+          verdict: "real",
+          sources: [{ n: "The Hindu", v: true }, { n: "ICMR Registry", v: true }],
+          timestamp: baseTime - 48 * 60 * 60 * 1000
         }
       ];
       allFetched = mockData;

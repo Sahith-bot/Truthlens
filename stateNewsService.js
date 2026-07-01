@@ -51,7 +51,7 @@
 const NEWS_BASE    = 'https://newsdata.io/api/1/news';
 const COUNTRY_IN   = 'in';
 const LANG_EN      = 'en';
-const PAGE_SIZE    = 10;   // max per call (free tier)
+const STATE_PAGE_SIZE = 10;   // max per call (free tier)
 
 /* ── STATE DETECTION KEYWORD TABLES ────────────────────────────────
    Each entry: { pattern: RegExp, weight: number }
@@ -337,7 +337,7 @@ const StateNewsService = (() => {
         apikey   : keyObj.key,
         language : LANG_EN,
         country  : COUNTRY_IN,
-        size     : PAGE_SIZE,
+        size     : STATE_PAGE_SIZE,
       });
       if (category) params.set('category', category);
       if (query)    params.set('q', query);

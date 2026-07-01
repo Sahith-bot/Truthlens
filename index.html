@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="TruthLens uses real-time AI fact-checking heuristics and cross-references over 80,000 global sources to verify news accuracy.">
+  <meta name="description"
+    content="TruthLens uses real-time AI fact-checking heuristics and cross-references over 80,000 global sources to verify news accuracy.">
   <title>TruthLens — AI News Verifier</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
@@ -192,6 +193,46 @@
       }
     }
 
+    /* HEADER CENTER CONTAINER */
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    /* STATE NEWS BUTTON */
+    .state-news-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 214, 0, 0.08);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--yellow);
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Space Grotesk', sans-serif;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    .state-news-btn:hover {
+      background: var(--yellow);
+      color: var(--black);
+      border-color: var(--yellow);
+      box-shadow: 0 0 12px rgba(255, 214, 0, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .state-news-btn:active {
+      transform: translateY(0);
+    }
+
     /* API KEY BAR — hidden */
     .api-bar {
       display: none;
@@ -297,6 +338,7 @@
       0% {
         transform: translateX(0);
       }
+
       100% {
         transform: translateX(-50%);
       }
@@ -306,6 +348,7 @@
       0% {
         transform: translateX(-50%);
       }
+
       100% {
         transform: translateX(0);
       }
@@ -1090,15 +1133,31 @@
     }
 
     @keyframes pulse-green {
-      0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(0, 230, 118, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(0, 230, 118, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 230, 118, 0);
+      }
     }
 
     @keyframes pulse-red {
-      0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(255, 23, 68, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(255, 23, 68, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 23, 68, 0);
+      }
     }
 
     .widget-text {
@@ -1334,6 +1393,319 @@
       color: var(--yellow);
       background: rgba(255, 214, 0, 0.05);
     }
+
+    /* ============================================================
+       STATE NEWS PAGE
+    ============================================================ */
+    #stateNewsPage {
+      display: none;
+      animation: fadeInPage 0.3s ease;
+    }
+
+    #stateNewsPage.active {
+      display: block;
+    }
+
+    @keyframes fadeInPage {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .state-news-hero {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 36px 24px 20px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .state-news-hero-left h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 0.95;
+      letter-spacing: 2px;
+      color: var(--white);
+    }
+
+    .state-news-hero-left h2 span {
+      color: var(--yellow);
+    }
+
+    .state-news-hero-left p {
+      font-size: 14px;
+      color: var(--gray2);
+      margin-top: 10px;
+      max-width: 520px;
+      line-height: 1.6;
+    }
+
+    .state-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--black3);
+      border: 1px solid rgba(255, 214, 0, 0.25);
+      color: var(--yellow);
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .state-back-btn:hover {
+      background: var(--yellow);
+      color: var(--black);
+      border-color: var(--yellow);
+    }
+
+    /* State tabs */
+    .state-tabs {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 20px;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .state-tabs::-webkit-scrollbar { display: none; }
+
+    .state-tab {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 30px;
+      border: 1px solid var(--gray);
+      background: transparent;
+      color: var(--gray2);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .state-tab:hover {
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+
+    .state-tab.active {
+      background: var(--yellow);
+      border-color: var(--yellow);
+      color: var(--black);
+      font-weight: 700;
+    }
+
+    .state-tab .tab-flag {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    /* State section wrapper */
+    .state-section-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+
+    .state-panel {
+      display: none;
+    }
+
+    .state-panel.active {
+      display: block;
+      animation: fadeInPage 0.25s ease;
+    }
+
+    /* State hero banner per-state */
+    .state-banner {
+      border-radius: 20px;
+      padding: 32px 36px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .state-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 214, 0, 0.2);
+      pointer-events: none;
+    }
+
+    .state-banner-ap {
+      background: linear-gradient(135deg, rgba(0, 80, 160, 0.25) 0%, rgba(10, 10, 10, 0.95) 60%);
+    }
+
+    .state-banner-ts {
+      background: linear-gradient(135deg, rgba(140, 0, 0, 0.25) 0%, rgba(10, 10, 10, 0.95) 60%);
+    }
+
+    .state-banner-info h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 2px;
+      color: var(--yellow);
+      margin-bottom: 6px;
+    }
+
+    .state-banner-info p {
+      font-size: 13px;
+      color: var(--gray2);
+      line-height: 1.7;
+      max-width: 480px;
+    }
+
+    .state-banner-emoji {
+      font-size: 72px;
+      line-height: 1;
+      opacity: 0.6;
+    }
+
+    .state-stats-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .state-stat-box {
+      flex: 1;
+      min-width: 120px;
+      background: var(--black3);
+      border: 1px solid rgba(255, 214, 0, 0.12);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: center;
+    }
+
+    .state-stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      color: var(--yellow);
+      line-height: 1;
+    }
+
+    .state-stat-label {
+      font-size: 11px;
+      color: var(--gray2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* Coming soon placeholder card */
+    .coming-soon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .coming-soon-card {
+      background: var(--black2);
+      border: 1px dashed rgba(255, 214, 0, 0.2);
+      border-radius: 16px;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      min-height: 200px;
+      transition: all 0.3s;
+    }
+
+    .coming-soon-card:hover {
+      border-color: rgba(255, 214, 0, 0.4);
+      background: var(--black3);
+    }
+
+    .coming-soon-icon {
+      font-size: 36px;
+      opacity: 0.5;
+    }
+
+    .coming-soon-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray2);
+      letter-spacing: 0.5px;
+    }
+
+    .coming-soon-sub {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .coming-soon-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 214, 0, 0.08);
+      border: 1px solid rgba(255, 214, 0, 0.2);
+      color: var(--yellow);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* District chips */
+    .district-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .district-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--black4);
+      background: var(--black3);
+      color: var(--gray2);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: default;
+      transition: all 0.2s;
+    }
+
+    .district-chip:hover {
+      border-color: rgba(255, 214, 0, 0.3);
+      color: var(--yellow);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .state-banner {
+        flex-direction: column;
+        padding: 24px;
+      }
+      .state-banner-emoji { font-size: 48px; }
+      .state-stats-row { gap: 10px; }
+    }
   </style>
 </head>
 
@@ -1350,9 +1722,18 @@
         </div>
       </div>
 
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        <span>LIVE</span>
+      <div class="header-center">
+        <button class="state-news-btn" onclick="openStateNews()" id="stateNewsBtn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          STATE NEWS
+        </button>
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          <span>LIVE</span>
+        </div>
       </div>
 
       <button class="refresh-btn" onclick="refreshNews()" id="refreshBtn">
@@ -1377,10 +1758,12 @@
       <div class="ticker-label">BREAKING</div>
       <div style="overflow:hidden;flex:1">
         <div class="ticker-track ticker-right" id="tickerTrack1">
-          <span class="ticker-item"><span class="ticker-dot"></span> TruthLens — AI-powered real-time fact checking</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> TruthLens — AI-powered real-time fact
+            checking</span>
           <span class="ticker-item"><span class="ticker-dot"></span> Live news streams updated every 5 minutes</span>
           <span class="ticker-item"><span class="ticker-dot"></span> Global coverage across 80,000+ sources</span>
-          <span class="ticker-item"><span class="ticker-dot"></span> TruthLens — AI-powered real-time fact checking</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> TruthLens — AI-powered real-time fact
+            checking</span>
           <span class="ticker-item"><span class="ticker-dot"></span> Live news streams updated every 5 minutes</span>
           <span class="ticker-item"><span class="ticker-dot"></span> Global coverage across 80,000+ sources</span>
         </div>
@@ -1390,12 +1773,18 @@
       <div class="ticker-label label-alt">FACT CHECKED</div>
       <div style="overflow:hidden;flex:1">
         <div class="ticker-track ticker-right" id="tickerTrack2">
-          <span class="ticker-item"><span class="ticker-dot"></span> VERIFIED REAL: 74% of scanned articles verified genuine today</span>
-          <span class="ticker-item"><span class="ticker-dot"></span> WARNING: Automated detection flags 12% suspicious claims</span>
-          <span class="ticker-item"><span class="ticker-dot"></span> ANALYSIS: DistilBERT NLP evaluating semantic corroboration</span>
-          <span class="ticker-item"><span class="ticker-dot"></span> VERIFIED REAL: 74% of scanned articles verified genuine today</span>
-          <span class="ticker-item"><span class="ticker-dot"></span> WARNING: Automated detection flags 12% suspicious claims</span>
-          <span class="ticker-item"><span class="ticker-dot"></span> ANALYSIS: DistilBERT NLP evaluating semantic corroboration</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> VERIFIED REAL: 74% of scanned articles verified
+            genuine today</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> WARNING: Automated detection flags 12% suspicious
+            claims</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> ANALYSIS: DistilBERT NLP evaluating semantic
+            corroboration</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> VERIFIED REAL: 74% of scanned articles verified
+            genuine today</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> WARNING: Automated detection flags 12% suspicious
+            claims</span>
+          <span class="ticker-item"><span class="ticker-dot"></span> ANALYSIS: DistilBERT NLP evaluating semantic
+            corroboration</span>
         </div>
       </div>
     </div>
@@ -1481,6 +1870,233 @@
     </div>
   </div>
 
+  <!-- =========================================================
+       STATE NEWS PAGE (hidden until user clicks STATE NEWS btn)
+  ========================================================= -->
+  <div id="stateNewsPage">
+
+    <!-- Hero -->
+    <div class="state-news-hero">
+      <div class="state-news-hero-left">
+        <h2>STATE <span>NEWS</span></h2>
+        <p>Hyperlocal coverage from Andhra Pradesh &amp; Telangana — AI-verified, real-time fact-checked news for your state.</p>
+      </div>
+      <button class="state-back-btn" onclick="closeStateNews()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        Back to Home
+      </button>
+    </div>
+
+    <!-- State Tabs -->
+    <div class="state-tabs">
+      <button class="state-tab active" id="tab-ap" onclick="switchState('ap')">
+        <span class="tab-flag">🏛️</span> Andhra Pradesh
+      </button>
+      <button class="state-tab" id="tab-ts" onclick="switchState('ts')">
+        <span class="tab-flag">🌿</span> Telangana
+      </button>
+    </div>
+
+    <!-- State Content -->
+    <div class="state-section-wrap">
+
+      <!-- ── ANDHRA PRADESH PANEL ── -->
+      <div class="state-panel active" id="panel-ap">
+
+        <div class="state-banner state-banner-ap">
+          <div class="state-banner-info">
+            <h3>Andhra Pradesh</h3>
+            <p>Capital: Amaravati &nbsp;·&nbsp; Districts: 26 &nbsp;·&nbsp; Language: Telugu<br>
+              Stay updated with verified news from the state of Andhra Pradesh — politics, governance, infrastructure, and local stories.</p>
+          </div>
+          <div class="state-banner-emoji">🏛️</div>
+        </div>
+
+        <!-- Placeholder Stats -->
+        <div class="state-stats-row">
+          <div class="state-stat-box">
+            <div class="state-stat-num">26</div>
+            <div class="state-stat-label">Districts Covered</div>
+          </div>
+          <div class="state-stat-box">
+            <div class="state-stat-num">—</div>
+            <div class="state-stat-label">Articles Today</div>
+          </div>
+          <div class="state-stat-box">
+            <div class="state-stat-num">—</div>
+            <div class="state-stat-label">Verified Real</div>
+          </div>
+          <div class="state-stat-box">
+            <div class="state-stat-num">—</div>
+            <div class="state-stat-label">Flagged Fake</div>
+          </div>
+        </div>
+
+        <!-- District chips -->
+        <div class="district-chips" aria-label="AP Districts">
+          <span class="district-chip">Visakhapatnam</span>
+          <span class="district-chip">Vijayawada</span>
+          <span class="district-chip">Guntur</span>
+          <span class="district-chip">Tirupati</span>
+          <span class="district-chip">Kurnool</span>
+          <span class="district-chip">Rajamahendravaram</span>
+          <span class="district-chip">Nellore</span>
+          <span class="district-chip">Kakinada</span>
+          <span class="district-chip">Ongole</span>
+          <span class="district-chip">Eluru</span>
+          <span class="district-chip">Anantapur</span>
+          <span class="district-chip">Kadapa</span>
+          <span class="district-chip">+ 14 more</span>
+        </div>
+
+        <!-- Section: Latest AP News -->
+        <div class="section-label" style="margin-bottom:16px;">Latest from Andhra Pradesh</div>
+
+        <!-- Placeholder cards -->
+        <div class="coming-soon-grid" id="apNewsGrid">
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">📰</div>
+            <div class="coming-soon-title">AP Politics &amp; Governance</div>
+            <div class="coming-soon-sub">State legislature, cabinet decisions &amp; local governance</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🏗️</div>
+            <div class="coming-soon-title">Infrastructure &amp; Projects</div>
+            <div class="coming-soon-sub">Amaravati development, roads, ports &amp; public works</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🌾</div>
+            <div class="coming-soon-title">Agriculture &amp; Rural</div>
+            <div class="coming-soon-sub">Farmer schemes, crop updates &amp; rural welfare</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">⚽</div>
+            <div class="coming-soon-title">Sports &amp; Culture</div>
+            <div class="coming-soon-sub">Local tournaments, Kuchipudi, festivals &amp; art</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🏥</div>
+            <div class="coming-soon-title">Health &amp; Education</div>
+            <div class="coming-soon-sub">Hospital updates, schools, colleges &amp; welfare schemes</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🌊</div>
+            <div class="coming-soon-title">Environment &amp; Disaster</div>
+            <div class="coming-soon-sub">Cyclone alerts, floods, river monitoring &amp; climate</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- end #panel-ap -->
+
+      <!-- ── TELANGANA PANEL ── -->
+      <div class="state-panel" id="panel-ts">
+
+        <div class="state-banner state-banner-ts">
+          <div class="state-banner-info">
+            <h3>Telangana</h3>
+            <p>Capital: Hyderabad &nbsp;·&nbsp; Districts: 33 &nbsp;·&nbsp; Language: Telugu<br>
+              Get AI-verified hyperlocal news from Telangana — politics, tech hubs, development initiatives, and local stories.</p>
+          </div>
+          <div class="state-banner-emoji">🌿</div>
+        </div>
+
+        <!-- Placeholder Stats -->
+        <div class="state-stats-row">
+          <div class="state-stat-box">
+            <div class="state-stat-num">33</div>
+            <div class="state-stat-label">Districts Covered</div>
+          </div>
+          <div class="state-stat-box">
+            <div class="state-stat-num">—</div>
+            <div class="state-stat-label">Articles Today</div>
+          </div>
+          <div class="state-stat-box">
+            <div class="state-stat-num">—</div>
+            <div class="state-stat-label">Verified Real</div>
+          </div>
+          <div class="state-stat-box">
+            <div class="state-stat-num">—</div>
+            <div class="state-stat-label">Flagged Fake</div>
+          </div>
+        </div>
+
+        <!-- District chips -->
+        <div class="district-chips" aria-label="TS Districts">
+          <span class="district-chip">Hyderabad</span>
+          <span class="district-chip">Warangal</span>
+          <span class="district-chip">Nizamabad</span>
+          <span class="district-chip">Karimnagar</span>
+          <span class="district-chip">Khammam</span>
+          <span class="district-chip">Mahbubnagar</span>
+          <span class="district-chip">Nalgonda</span>
+          <span class="district-chip">Adilabad</span>
+          <span class="district-chip">Medak</span>
+          <span class="district-chip">Rangareddy</span>
+          <span class="district-chip">Siddipet</span>
+          <span class="district-chip">Suryapet</span>
+          <span class="district-chip">+ 21 more</span>
+        </div>
+
+        <!-- Section: Latest TS News -->
+        <div class="section-label" style="margin-bottom:16px;">Latest from Telangana</div>
+
+        <!-- Placeholder cards -->
+        <div class="coming-soon-grid" id="tsNewsGrid">
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">📰</div>
+            <div class="coming-soon-title">TS Politics &amp; Governance</div>
+            <div class="coming-soon-sub">Assembly sessions, cabinet orders &amp; GHMC updates</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">💻</div>
+            <div class="coming-soon-title">Tech &amp; Startups</div>
+            <div class="coming-soon-sub">HITEC City, T-Hub, IT policy &amp; startup ecosystem</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🌾</div>
+            <div class="coming-soon-title">Agriculture &amp; Rytu Bandhu</div>
+            <div class="coming-soon-sub">Farmer investment support, irrigation &amp; Kaleshwaram</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🎭</div>
+            <div class="coming-soon-title">Culture &amp; Heritage</div>
+            <div class="coming-soon-sub">Bonalu, Bathukamma, Nizam history &amp; local arts</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🏥</div>
+            <div class="coming-soon-title">Health &amp; Aarogyasri</div>
+            <div class="coming-soon-sub">NIMS, Aarogyasri scheme, public health &amp; AIIMS Bibinagar</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+          <div class="coming-soon-card">
+            <div class="coming-soon-icon">🚇</div>
+            <div class="coming-soon-title">Infrastructure &amp; Metro</div>
+            <div class="coming-soon-sub">Hyderabad Metro expansion, roads, SRDP &amp; Ring Road</div>
+            <span class="coming-soon-badge">⏳ API Coming Soon</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- end #panel-ts -->
+
+    </div>
+    <!-- end .state-section-wrap -->
+  </div>
+  <!-- end #stateNewsPage -->
+
   <!-- FOOTER -->
   <footer>
     <strong
@@ -1501,13 +2117,13 @@
       <span class="widget-text">⚡ API Credits: <strong id="widgetCreditsBadge">800 Credits</strong></span>
       <span class="widget-arrow">▲</span>
     </div>
-    
+
     <div class="console-panel" id="consolePanel">
       <div class="console-header">
         <h3>API ROTATION SYSTEM</h3>
         <button class="console-close-btn" onclick="toggleConsole(event)">&times;</button>
       </div>
-      
+
       <div class="console-body">
         <div class="console-summary">
           <div class="summary-item">
@@ -1519,12 +2135,12 @@
             <span class="sum-val">Midnight (Daily)</span>
           </div>
         </div>
-        
+
         <div class="console-keys" id="consoleKeyList">
           <!-- Populated by JavaScript dynamically -->
         </div>
       </div>
-      
+
       <div class="console-footer">
         <span>NewsData.io • 10 articles/credit</span>
         <button class="console-reset-btn" onclick="resetCreditsManual()">Reset Usage</button>
@@ -1533,6 +2149,9 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- State News Service (backend layer — isolated from global flow) -->
+  <script src="stateNewsService.js"></script>
 
   <script>
     /* ============================================================
@@ -1547,6 +2166,12 @@
     let isLoading = false;
     let _idCounter = 1;
     const PAGE_SIZE = 10;
+
+    /* ── STATE NEWS CACHE (isolated from global) ─────────────── */
+    let stateNewsCache = { ap: [], ts: [] };
+    const stateArticleMap = new Map();   // id → article (for modal)
+    let stateNewsLoaded   = false;
+    let stateNewsLoading  = false;
 
     /* ── NEWSDATA.IO DIRECT FETCH ────────────────────────────── */
     const NEWS_BASE_URL = 'https://newsdata.io/api/1/news';
@@ -1579,7 +2204,7 @@
       try {
         const savedData = JSON.parse(localStorage.getItem('tl_key_state_v2') || '{}');
         const todayStr = new Date().toDateString();
-        
+
         if (savedData.date !== todayStr) {
           // New day detected: reset all keys to 0 credits used
           API_KEYS.forEach(k => {
@@ -1607,7 +2232,7 @@
               API_KEYS[i].exhausted = s.exhausted || false;
             }
           });
-        } catch (err) {}
+        } catch (err) { }
       }
       updateConsoleUI();
     }
@@ -1656,17 +2281,17 @@
     function updateConsoleUI() {
       const activeKey = getActiveKey();
       const activeIdx = activeKey ? API_KEYS.indexOf(activeKey) : -1;
-      
+
       const listEl = document.getElementById('consoleKeyList');
       if (!listEl) return;
-      
+
       let totalUsed = 0;
-      
+
       listEl.innerHTML = API_KEYS.map((k, idx) => {
         totalUsed += k.used;
         const isCurrent = idx === activeIdx;
         const pct = Math.min(100, Math.round((k.used / k.limit) * 100));
-        
+
         let statusText = 'Ready';
         let statusClass = 'status-ready';
         if (k.exhausted || k.used >= k.limit) {
@@ -1676,10 +2301,10 @@
           statusText = 'Active';
           statusClass = 'status-active';
         }
-        
+
         // Hide actual key string partially for safety
         const maskedKey = k.key.substring(0, 6) + '...' + k.key.substring(k.key.length - 4);
-        
+
         return `
           <div class="console-key-item ${isCurrent ? 'current' : ''} ${k.exhausted ? 'exhausted' : ''}">
             <div class="console-key-header">
@@ -1696,17 +2321,17 @@
           </div>
         `;
       }).join('');
-      
+
       const totalRemaining = 800 - totalUsed;
-      
+
       const totalCreditsEl = document.getElementById('consoleTotalCredits');
       if (totalCreditsEl) totalCreditsEl.textContent = `${totalRemaining} / 800`;
-      
+
       const badgeEl = document.getElementById('widgetCreditsBadge');
       if (badgeEl) {
         badgeEl.textContent = `${totalRemaining} Credits`;
       }
-      
+
       // Update badge indicator class
       const dotEl = document.getElementById('widgetStatusDot');
       if (dotEl) {
@@ -1746,7 +2371,7 @@
         if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
           return url;
         }
-      } catch (e) {}
+      } catch (e) { }
       return '#';
     }
 
@@ -1833,12 +2458,12 @@
     function balanceNewsRatio(articles) {
       const india = articles.filter(a => a.isIndia);
       const intl = articles.filter(a => !a.isIndia);
-      
+
       india.sort((a, b) => b.timestamp - a.timestamp);
       intl.sort((a, b) => b.timestamp - a.timestamp);
-      
+
       const N = Math.min(intl.length, Math.floor(india.length / 4));
-      
+
       // If we don't have enough articles of both types to balance cleanly,
       // or if balancing would discard too many articles (e.g. keeping less than 20),
       // we just return all articles sorted by time.
@@ -1846,7 +2471,7 @@
         articles.sort((a, b) => b.timestamp - a.timestamp);
         return articles;
       }
-      
+
       const indiaCount = N * 4;
       const balanced = [...india.slice(0, indiaCount), ...intl.slice(0, N)];
       balanced.sort((a, b) => b.timestamp - a.timestamp);
@@ -1862,18 +2487,18 @@
         if (!keyObj) {
           throw new Error('All 4 API keys are fully exhausted for today (800/800 credits consumed).');
         }
-        
+
         try {
           const params = new URLSearchParams({ apikey: keyObj.key, language: 'en', category: cat, size: 10 });
           if (country) params.set('country', country);
-          
+
           const res = await fetch(`${NEWS_BASE_URL}?${params}`);
-          
+
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             const msg = err.results?.message || `HTTP ${res.status}`;
             const lowerMsg = msg.toLowerCase();
-            
+
             // Check if key is invalid, rate limited, or exhausted
             if (res.status === 401 || res.status === 429 || lowerMsg.includes('invalid') || lowerMsg.includes('apikey') || lowerMsg.includes('credit') || lowerMsg.includes('limit')) {
               keyObj.exhausted = true;
@@ -1884,12 +2509,12 @@
             }
             throw new Error(msg);
           }
-          
+
           const data = await res.json();
           if (data.status !== 'success') {
             const msg = data.results?.message || 'API error';
             const lowerMsg = msg.toLowerCase();
-            
+
             if (lowerMsg.includes('credit') || lowerMsg.includes('limit') || lowerMsg.includes('apikey')) {
               keyObj.exhausted = true;
               saveKeyState();
@@ -1899,16 +2524,16 @@
             }
             throw new Error(msg);
           }
-          
+
           // Successfully fetched! Increment usage & save
           consumeCredit(keyObj);
           return (data.results || []).map((a, i) => mapArticle(a, cat, i, country === 'in'));
-          
+
         } catch (err) {
           if (err.message.includes('fully exhausted')) {
             throw err;
           }
-          
+
           const lowerErr = err.message.toLowerCase();
           if (lowerErr.includes('credit') || lowerErr.includes('limit') || lowerErr.includes('apikey') || lowerErr.includes('401') || lowerErr.includes('429')) {
             keyObj.exhausted = true;
@@ -1917,7 +2542,7 @@
             showToast(`🔄 Key ${idx + 1} exhausted/invalid — rotating to Key ${idx + 2}`);
             continue; // try next key
           }
-          
+
           throw err; // throw standard errors (e.g. offline/network)
         }
       }
@@ -2551,6 +3176,363 @@
       renderArticles();
       updateTickers();
       updateStats();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       STATE NEWS — CARD BUILDER & RENDERER
+    ═══════════════════════════════════════════════════════════ */
+
+    // Maps verdict label → existing badge CSS class
+    const STATE_VERDICT_CLASS = {
+      'Verified Real' : 'badge-real',
+      'Likely Fake'   : 'badge-fake',
+      'Unclear'       : 'badge-unclear',
+    };
+    const STATE_BAR_LABELS = {
+      real: 'Real', fake: 'Fake', unclear: 'Unclear', unverified: 'Unverified'
+    };
+
+    /** Build a news card HTML string from a StateNewsService article. */
+    function buildStateCard(a) {
+      const verdictKey = a.verdict.label === 'Verified Real' ? 'real'
+                       : a.verdict.label === 'Likely Fake'   ? 'fake'
+                       : 'unclear';
+      const vbClass = VERDICT_BADGE_CLASS[verdictKey] || 'badge-unclear';
+      const icon    = CATEGORY_ICONS[a.category] || '📰';
+
+      const sanitizedImg  = sanitizeUrl(a.imageUrl);
+      const sanitizedLink = sanitizeUrl(a.articleUrl);
+
+      const imgHtml = sanitizedImg
+        ? `<img class="card-img" src="${escapeHTML(sanitizedImg)}" alt="" loading="lazy"
+               onerror="this.parentElement.innerHTML='<div class=\\'placeholder-icon\\'>${escapeHTML(icon)}</div>'">`
+        : `<div class="placeholder-icon">${escapeHTML(icon)}</div>`;
+
+      // State badge inline style (reuses cat-tag class with yellow tint)
+      const stateBadge = `<span class="cat-tag" style="
+          background:rgba(255,214,0,0.08);
+          border-color:rgba(255,214,0,0.25);
+          color:var(--yellow)">${escapeHTML(a.state === 'Andhra Pradesh' ? 'AP' : 'TS')}</span>`;
+          
+      // Coverage badge for clustered articles
+      const coverageBadge = (a.clusterSize > 1) 
+        ? `<span class="source-tag" style="background:rgba(255,255,255,0.1); color:white;">+${a.clusterSize - 1} other sources</span>` 
+        : '';
+        
+      const summaryText = a.aiSummary || a.description;
+
+      return `
+  <div class="news-card" onclick="openStateModal(${a.id})">
+    <div class="card-img-placeholder">${imgHtml}</div>
+    <div class="card-body">
+      <div class="card-meta">
+        <span class="cat-tag">${escapeHTML(a.category.toUpperCase())}</span>
+        ${stateBadge}
+        <span class="source-tag">${escapeHTML(a.source)}</span>
+        ${coverageBadge}
+        <span class="time-tag">${escapeHTML(a.dateAgo)}</span>
+      </div>
+      <div class="card-title">${escapeHTML(a.title)}</div>
+      <div class="card-excerpt">
+        ${a.clusterSize > 1 ? '<strong style="color:var(--yellow); font-size:0.9em; margin-right:4px;">✨ AI SUMMARY</strong>' : ''}
+        ${escapeHTML(summaryText)}
+      </div>
+      ${sanitizedLink && sanitizedLink !== '#'
+        ? `<a class="card-read-link" href="${escapeHTML(sanitizedLink)}" target="_blank" rel="noopener"
+               onclick="event.stopPropagation()">Read full article ↗</a>`
+        : ''}
+    </div>
+    <div class="verdict-section">
+      <div class="verdict-label">AI Verdict</div>
+      <div class="verdict-bars">
+        ${['real','fake','unclear','unverified'].map(k => `
+        <div class="verdict-row">
+          <span class="verdict-name" style="color:var(--${k})">${STATE_BAR_LABELS[k]}</span>
+          <div class="verdict-bar-wrap">
+            <div class="verdict-bar-fill" style="width:0%;background:var(--${k})" data-target="${a.verdict[k]}"></div>
+          </div>
+          <span class="verdict-pct" style="color:var(--${k})">${a.verdict[k]}%</span>
+        </div>`).join('')}
+      </div>
+      <div class="verdict-badge ${vbClass}">${escapeHTML(a.verdict.label)}</div>
+    </div>
+  </div>`;
+    }
+
+    /** Render a state's news grid from cache. */
+    function renderStateGrid(stateKey) {
+      const gridId   = stateKey === 'ap' ? 'apNewsGrid' : 'tsNewsGrid';
+      const gridEl   = document.getElementById(gridId);
+      if (!gridEl) return;
+
+      const articles = stateNewsCache[stateKey] || [];
+
+      if (articles.length === 0) {
+        gridEl.className = 'coming-soon-grid';
+        gridEl.innerHTML = `
+          <div class="coming-soon-card" style="grid-column:1/-1">
+            <div class="coming-soon-icon">📭</div>
+            <div class="coming-soon-title">No state news found</div>
+            <div class="coming-soon-sub">No articles matched ${stateKey === 'ap' ? 'Andhra Pradesh' : 'Telangana'} keywords. Try refreshing.</div>
+          </div>`;
+        return;
+      }
+
+      // Register articles in map for modal access
+      articles.forEach(a => stateArticleMap.set(a.id, a));
+
+      // Switch grid class and render cards
+      gridEl.className = 'news-grid';
+      gridEl.innerHTML = articles.map(a => buildStateCard(a)).join('');
+      setTimeout(animateBars, 100);
+    }
+
+    /** Show a loading spinner inside a state grid. */
+    function showStateGridLoader(stateKey, msg) {
+      const gridId = stateKey === 'ap' ? 'apNewsGrid' : 'tsNewsGrid';
+      const gridEl = document.getElementById(gridId);
+      if (!gridEl) return;
+      gridEl.className = 'coming-soon-grid';
+      gridEl.innerHTML = `
+        <div class="loader" style="grid-column:1/-1">
+          <div class="loader-ring"></div>
+          <div class="loader-text">${escapeHTML(msg || 'Fetching state news…')}</div>
+        </div>`;
+    }
+
+    /** Show an error state inside a grid. */
+    function showStateGridError(stateKey, msg) {
+      const gridId = stateKey === 'ap' ? 'apNewsGrid' : 'tsNewsGrid';
+      const gridEl = document.getElementById(gridId);
+      if (!gridEl) return;
+      gridEl.className = 'coming-soon-grid';
+      gridEl.innerHTML = `
+        <div class="error-notice" style="grid-column:1/-1">
+          <strong>Could not load state news.</strong><br>${escapeHTML(msg || 'Unknown error.')}
+        </div>`;
+    }
+
+    /** Update the 4 stat boxes inside a state panel. */
+    function updateStateStats(stateKey) {
+      if (!window.StateNewsService) return;
+      const stats   = StateNewsService.getStats(stateKey);
+      const prefix  = stateKey === 'ap' ? 'ap' : 'ts';
+
+      // We select the stat boxes by position inside the panel
+      const panel = document.getElementById('panel-' + stateKey);
+      if (!panel) return;
+      const boxes  = panel.querySelectorAll('.state-stat-num');
+      if (boxes.length < 4) return;
+
+      // boxes[0] = Districts (static), boxes[1] = Articles, boxes[2] = Real%, boxes[3] = Fake%
+      boxes[1].textContent = stats.total   || '—';
+      boxes[2].textContent = stats.total   ? stats.realPct + '%' : '—';
+      boxes[3].textContent = stats.total   ? stats.fakePct + '%' : '—';
+    }
+
+    /* ── STATE MODAL ─────────────────────────────────────────── */
+    /** Open the existing article modal for a state news article. */
+    function openStateModal(id) {
+      const a = stateArticleMap.get(id);
+      if (!a) return;
+
+      const verdictKey = a.verdict.label === 'Verified Real' ? 'real'
+                       : a.verdict.label === 'Likely Fake'   ? 'fake'
+                       : 'unclear';
+      const vb = VERDICT_BADGE_CLASS[verdictKey] || 'badge-unclear';
+
+      // Image
+      const imgEl = document.getElementById('modalImg');
+      if (a.imageUrl) { imgEl.src = a.imageUrl; imgEl.style.display = ''; }
+      else imgEl.style.display = 'none';
+
+      // Title & labels
+      document.getElementById('modalTitle').textContent = a.title;
+      document.getElementById('modalSourcesTitle').textContent = 'Source';
+      document.getElementById('modalVerdictTitle').textContent = 'AI Verdict Analysis';
+
+      // Read full link
+      const readFull = document.getElementById('modalReadFull');
+      if (a.articleUrl) { readFull.href = a.articleUrl; readFull.style.display = ''; }
+      else readFull.style.display = 'none';
+
+      // Meta row — adds a state badge
+      document.getElementById('modalMeta').innerHTML = `
+        <span class="cat-tag">${escapeHTML(a.category.toUpperCase())}</span>
+        <span class="cat-tag" style="background:rgba(255,214,0,0.08);border-color:rgba(255,214,0,0.25);color:var(--yellow)">
+          ${escapeHTML(a.state)}
+        </span>
+        <span class="source-tag">${escapeHTML(a.source)}</span>
+        <span class="time-tag">${escapeHTML(a.dateAgo)}</span>`;
+
+      // Source list
+      let sourcesHtml = `
+        <div class="source-item">
+          <div class="source-icon" style="background:rgba(0,230,118,0.15);color:var(--real)">✓</div>
+          <span style="color:var(--real);font-weight:600">${escapeHTML(a.source)}</span>
+          <span style="color:var(--gray2);font-size:12px;margin-left:auto">Primary Source</span>
+        </div>`;
+        
+      if (a.relatedSources && a.relatedSources.length > 0) {
+        a.relatedSources.forEach(rs => {
+          sourcesHtml += `
+            <div class="source-item">
+              <div class="source-icon" style="background:var(--black4);color:var(--gray)">✓</div>
+              <span style="color:var(--gray2);font-weight:600">${escapeHTML(rs)}</span>
+              <span style="color:var(--gray2);font-size:12px;margin-left:auto">Corroborated</span>
+            </div>`;
+        });
+      }
+      document.getElementById('modalSourceList').innerHTML = sourcesHtml;
+
+      // Big verdict bars
+      document.getElementById('modalBigBars').innerHTML =
+        ['real','fake','unclear','unverified'].map(k => `
+          <div class="big-bar-row">
+            <span class="big-bar-name" style="color:var(--${k})">${STATE_BAR_LABELS[k]}</span>
+            <div class="big-bar-wrap">
+              <div class="big-bar-fill" style="width:0%;background:var(--${k})" data-target="${a.verdict[k]}"></div>
+            </div>
+            <span class="big-bar-pct" style="color:var(--${k})">${a.verdict[k]}%</span>
+          </div>`).join('');
+
+      // Badge + body
+      document.getElementById('modalBadgeWrap').innerHTML =
+        `<div class="verdict-badge ${vb}" style="font-size:14px;padding:8px 16px;">${escapeHTML(a.verdict.label)}</div>`;
+        
+      const articleText = (a.aiSummary && a.clusterSize > 1) 
+        ? a.aiSummary + '\n\n---\n\n' + a.description 
+        : a.description;
+      document.getElementById('modalArticle').textContent = articleText;
+
+      document.getElementById('modalOverlay').classList.add('open');
+      setTimeout(animateBars, 200);
+    }
+
+    /* ── STATE NEWS PAGE NAVIGATION ─────────────────────────── */
+    // IDs of the main homepage sections to hide when state page opens
+    const HOME_SECTIONS = [
+      'tickerContainerEl',
+      'heroSection',
+      'categoriesWrap',
+      'mainWrap',
+      'loadMoreBtn'
+    ];
+
+    function openStateNews() {
+      // ── 1. Hide homepage sections ─────────────────────────────
+      const tickerEl = document.querySelector('.ticker-container');
+      if (tickerEl) tickerEl.style.display = 'none';
+      const heroEl = document.querySelector('.hero');
+      if (heroEl) heroEl.style.display = 'none';
+      const catsEl = document.getElementById('categoriesWrap');
+      if (catsEl) catsEl.style.display = 'none';
+      const mainEl = document.querySelector('.main-wrap');
+      if (mainEl) mainEl.style.display = 'none';
+
+      // ── 2. Show state news page ───────────────────────────────
+      const page = document.getElementById('stateNewsPage');
+      if (page) page.classList.add('active');
+
+      // ── 3. Highlight STATE NEWS button ────────────────────────
+      const btn = document.getElementById('stateNewsBtn');
+      if (btn) {
+        btn.style.background    = 'var(--yellow)';
+        btn.style.color         = 'var(--black)';
+        btn.style.borderColor   = 'var(--yellow)';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // ── 4. Fetch news only once (or if not yet loaded) ────────
+      if (stateNewsLoaded || stateNewsLoading) return;
+      if (!window.StateNewsService) {
+        showStateGridError('ap', 'StateNewsService not loaded.');
+        showStateGridError('ts', 'StateNewsService not loaded.');
+        return;
+      }
+
+      stateNewsLoading = true;
+
+      // Show loaders in both grids immediately
+      showStateGridLoader('ap', 'Fetching Andhra Pradesh news…');
+      showStateGridLoader('ts', 'Fetching Telangana news…');
+
+      // Initialise service with the same keys used by global flow
+      StateNewsService.init(API_KEYS.map(k => ({ key: k.key, limit: k.limit })));
+
+      // Fetch AP and TS concurrently
+      StateNewsService.fetchBoth()
+        .then(result => {
+          stateNewsCache.ap = result.ap || [];
+          stateNewsCache.ts = result.ts || [];
+          stateNewsLoaded   = true;
+          stateNewsLoading  = false;
+
+          renderStateGrid('ap');
+          renderStateGrid('ts');
+          updateStateStats('ap');
+          updateStateStats('ts');
+
+          const total = stateNewsCache.ap.length + stateNewsCache.ts.length;
+          showToast(`📍 ${total} state articles loaded — AP: ${stateNewsCache.ap.length} · TS: ${stateNewsCache.ts.length}`);
+
+          if (result.errors && result.errors.length) {
+            console.warn('[StateNews] Partial errors:', result.errors);
+          }
+        })
+        .catch(err => {
+          stateNewsLoading = false;
+          const msg = err.message || 'Unknown error';
+          showStateGridError('ap', msg);
+          showStateGridError('ts', msg);
+          showToast(`⚠️ State news fetch failed: ${msg}`);
+          console.error('[StateNews] fetchBoth error:', err);
+        });
+    }
+
+    function closeStateNews() {
+      // Restore homepage content
+      const tickerEl = document.querySelector('.ticker-container');
+      if (tickerEl) tickerEl.style.display = '';
+      const heroEl = document.querySelector('.hero');
+      if (heroEl) heroEl.style.display = '';
+      const catsEl = document.getElementById('categoriesWrap');
+      if (catsEl) catsEl.style.display = '';
+      const mainEl = document.querySelector('.main-wrap');
+      if (mainEl) mainEl.style.display = '';
+
+      // Hide state news page
+      const page = document.getElementById('stateNewsPage');
+      if (page) page.classList.remove('active');
+
+      // Reset STATE NEWS button
+      const btn = document.getElementById('stateNewsBtn');
+      if (btn) {
+        btn.style.background  = '';
+        btn.style.color       = '';
+        btn.style.borderColor = '';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchState(stateKey) {
+      // Update tab highlight
+      document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+      const activeTab = document.getElementById('tab-' + stateKey);
+      if (activeTab) activeTab.classList.add('active');
+
+      // Show correct panel
+      document.querySelectorAll('.state-panel').forEach(p => p.classList.remove('active'));
+      const activePanel = document.getElementById('panel-' + stateKey);
+      if (activePanel) activePanel.classList.add('active');
+
+      // If data already loaded, re-render (covers tab switch after load)
+      if (stateNewsLoaded) {
+        renderStateGrid(stateKey);
+        updateStateStats(stateKey);
+      }
     }
 
     /* ── INIT ────────────────────────────────────────────────── */

@@ -2934,23 +2934,81 @@
         btn.classList.add('spinning');
         btn.disabled = true;
       }
-      const featuredGrid = document.getElementById('featuredGrid');
-      if (featuredGrid) {
-        featuredGrid.innerHTML =
-          `<div class="loader"><div class="loader-ring"></div><div class="loader-text">Scanning news sources...</div></div>`;
-      }
-      const newsGrid = document.getElementById('newsGrid');
-      if (newsGrid) newsGrid.innerHTML = '';
-      displayedCount = 0;
-      allFetched = [];
-      seenLinks.clear();
 
-      fetchAllNews().finally(() => {
-        if (btn) {
-          btn.classList.remove('spinning');
-          btn.disabled = false;
+      const isStateActive = document.getElementById('stateNewsPage')?.classList.contains('active');
+
+      if (isStateActive) {
+        if (!window.StateNewsService) {
+          showStateGridError('ap', 'StateNewsService not loaded.');
+          showStateGridError('ts', 'StateNewsService not loaded.');
+          if (btn) {
+            btn.classList.remove('spinning');
+            btn.disabled = false;
+          }
+          return;
         }
-      });
+
+        stateNewsLoaded = false;
+        stateNewsLoading = true;
+
+        showStateGridLoader('ap', 'Fetching Andhra Pradesh news…');
+        showStateGridLoader('ts', 'Fetching Telangana news…');
+
+        // Initialise service with the same keys used by global flow
+        StateNewsService.init(API_KEYS.map(k => ({ key: k.key, limit: k.limit })));
+
+        StateNewsService.fetchBoth()
+          .then(result => {
+            stateNewsCache.ap = result.ap || [];
+            stateNewsCache.ts = result.ts || [];
+            stateNewsLoaded   = true;
+            stateNewsLoading  = false;
+
+            renderStateGrid('ap');
+            renderStateGrid('ts');
+            updateStateStats('ap');
+            updateStateStats('ts');
+
+            const total = stateNewsCache.ap.length + stateNewsCache.ts.length;
+            showToast(`📍 ${total} state articles loaded — AP: ${stateNewsCache.ap.length} · TS: ${stateNewsCache.ts.length}`);
+
+            if (result.errors && result.errors.length) {
+              console.warn('[StateNews] Partial errors:', result.errors);
+            }
+          })
+          .catch(err => {
+            stateNewsLoading = false;
+            const msg = err.message || 'Unknown error';
+            showStateGridError('ap', msg);
+            showStateGridError('ts', msg);
+            showToast(`⚠️ State news fetch failed: ${msg}`);
+            console.error('[StateNews] fetchBoth error:', err);
+          })
+          .finally(() => {
+            if (btn) {
+              btn.classList.remove('spinning');
+              btn.disabled = false;
+            }
+          });
+      } else {
+        const featuredGrid = document.getElementById('featuredGrid');
+        if (featuredGrid) {
+          featuredGrid.innerHTML =
+            `<div class="loader"><div class="loader-ring"></div><div class="loader-text">Scanning news sources...</div></div>`;
+        }
+        const newsGrid = document.getElementById('newsGrid');
+        if (newsGrid) newsGrid.innerHTML = '';
+        displayedCount = 0;
+        allFetched = [];
+        seenLinks.clear();
+
+        fetchAllNews().finally(() => {
+          if (btn) {
+            btn.classList.remove('spinning');
+            btn.disabled = false;
+          }
+        });
+      }
     }
 
     /* ── TOAST ───────────────────────────────────────────────── */

@@ -2169,6 +2169,7 @@
 
     /* ── STATE NEWS CACHE (isolated from global) ─────────────── */
     let stateNewsCache = { ap: [], ts: [] };
+    let stateNewsErrors = { ap: null, ts: null };
     const stateArticleMap = new Map();   // id → article (for modal)
     let stateNewsLoaded   = false;
     let stateNewsLoading  = false;
@@ -2948,6 +2949,12 @@
           return;
         }
 
+        // Clear previous state before fetching
+        stateNewsCache.ap = [];
+        stateNewsCache.ts = [];
+        stateNewsErrors.ap = null;
+        stateNewsErrors.ts = null;
+        stateArticleMap.clear();
         stateNewsLoaded = false;
         stateNewsLoading = true;
 
@@ -2959,8 +2966,10 @@
 
         StateNewsService.fetchBoth()
           .then(result => {
-            stateNewsCache.ap = result.ap || [];
-            stateNewsCache.ts = result.ts || [];
+            stateNewsCache.ap = result.ap.value || [];
+            stateNewsCache.ts = result.ts.value || [];
+            stateNewsErrors.ap = result.ap.error || null;
+            stateNewsErrors.ts = result.ts.error || null;
             stateNewsLoaded   = true;
             stateNewsLoading  = false;
 
@@ -2972,13 +2981,16 @@
             const total = stateNewsCache.ap.length + stateNewsCache.ts.length;
             showToast(`📍 ${total} state articles loaded — AP: ${stateNewsCache.ap.length} · TS: ${stateNewsCache.ts.length}`);
 
-            if (result.errors && result.errors.length) {
-              console.warn('[StateNews] Partial errors:', result.errors);
+            const errors = [result.ap.error, result.ts.error].filter(Boolean);
+            if (errors.length > 0) {
+              showToast(`⚠️ Some state updates failed: ${errors.join(', ')}`);
             }
           })
           .catch(err => {
             stateNewsLoading = false;
             const msg = err.message || 'Unknown error';
+            stateNewsErrors.ap = msg;
+            stateNewsErrors.ts = msg;
             showStateGridError('ap', msg);
             showStateGridError('ts', msg);
             showToast(`⚠️ State news fetch failed: ${msg}`);
@@ -3323,6 +3335,12 @@
       const gridEl   = document.getElementById(gridId);
       if (!gridEl) return;
 
+      // Handle error state
+      if (stateNewsErrors[stateKey]) {
+        showStateGridError(stateKey, stateNewsErrors[stateKey]);
+        return;
+      }
+
       const articles = stateNewsCache[stateKey] || [];
 
       if (articles.length === 0) {
@@ -3510,6 +3528,12 @@
         return;
       }
 
+      // Clear previous state before fetching
+      stateNewsCache.ap = [];
+      stateNewsCache.ts = [];
+      stateNewsErrors.ap = null;
+      stateNewsErrors.ts = null;
+      stateArticleMap.clear();
       stateNewsLoading = true;
 
       // Show loaders in both grids immediately
@@ -3522,8 +3546,10 @@
       // Fetch AP and TS concurrently
       StateNewsService.fetchBoth()
         .then(result => {
-          stateNewsCache.ap = result.ap || [];
-          stateNewsCache.ts = result.ts || [];
+          stateNewsCache.ap = result.ap.value || [];
+          stateNewsCache.ts = result.ts.value || [];
+          stateNewsErrors.ap = result.ap.error || null;
+          stateNewsErrors.ts = result.ts.error || null;
           stateNewsLoaded   = true;
           stateNewsLoading  = false;
 
@@ -3535,13 +3561,16 @@
           const total = stateNewsCache.ap.length + stateNewsCache.ts.length;
           showToast(`📍 ${total} state articles loaded — AP: ${stateNewsCache.ap.length} · TS: ${stateNewsCache.ts.length}`);
 
-          if (result.errors && result.errors.length) {
-            console.warn('[StateNews] Partial errors:', result.errors);
+          const errors = [result.ap.error, result.ts.error].filter(Boolean);
+          if (errors.length > 0) {
+            showToast(`⚠️ Some state updates failed: ${errors.join(', ')}`);
           }
         })
         .catch(err => {
           stateNewsLoading = false;
           const msg = err.message || 'Unknown error';
+          stateNewsErrors.ap = msg;
+          stateNewsErrors.ts = msg;
           showStateGridError('ap', msg);
           showStateGridError('ts', msg);
           showToast(`⚠️ State news fetch failed: ${msg}`);

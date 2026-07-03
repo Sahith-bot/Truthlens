@@ -324,9 +324,10 @@ const StateNewsService = (() => {
    *
    * @param {string} category  - NewsData.io category string
    * @param {string} [query]   - optional keyword q= param
-   * @returns {Promise<object[]>} raw NewsData.io result items
+   * @param {string} [pageToken] - optional next page token
+   * @returns {Promise<{results: object[], nextPage: string}>} raw NewsData.io results and nextPage token
    */
-  async function _fetch(category, query = '') {
+  async function _fetch(category, query = '', pageToken = '') {
     while (true) {
       const keyObj = _getActiveKey();
       if (!keyObj) {
@@ -341,10 +342,11 @@ const StateNewsService = (() => {
       });
       if (category) params.set('category', category);
       if (query)    params.set('q', query);
+      if (pageToken) params.set('page', pageToken);
 
       let res;
       try {
-        res = await fetch(`${NEWS_BASE}?${params}`);
+        res = await fetch(`${NEWS_BASE}?${params}`, { cache: 'no-store' });
       } catch (networkErr) {
         throw new Error(`[StateNewsService] Network error: ${networkErr.message}`);
       }
@@ -380,7 +382,10 @@ const StateNewsService = (() => {
 
       // Success
       _consumeCredit(keyObj);
-      return data.results || [];
+      return {
+        results: data.results || [],
+        nextPage: data.nextPage || ''
+      };
     }
   }
 
@@ -494,14 +499,9 @@ const StateNewsService = (() => {
     const results    = [];
 
     for (const raw of rawArticles) {
-      // Deduplicate exact matches across all state fetches
-      const key = raw.link || raw.title || '';
-      if (_seen.has(key)) continue;
-
       const confidence = computeConfidence(raw.title, raw.description, keywords);
       if (confidence < CONFIDENCE_THRESHOLD) continue;  // not relevant enough
 
-      _seen.add(key);
       results.push(mapStateArticle(raw, stateName, confidence));
     }
 
@@ -516,27 +516,95 @@ const StateNewsService = (() => {
    * We use India-specific broad categories then keyword-filter server side.
    */
   const STATE_FETCH_CATEGORIES = [
-    'politics', 'top', 'business', 'entertainment',
-    'health',   'sports', 'technology',
+    'politics', 'business', 'technology', 'sports',
+    'health',   'entertainment', 'science'
   ];
 
   /**
-   * Build list of { category, query } fetch jobs for a given state.
-   * We alternate between category-only calls and keyword-boosted calls.
+   * Fetch state news from distinct categories, deduplicating and stopping once limit is met.
+   * Uses Promise.all to parallelise requests within each phase:
+   *   Phase 1 – fire all category first-pages concurrently.
+   *   Phase 2 – if still under the limit, paginate remaining categories in parallel batches.
+   *
+   * @param {string} stateKey - 'ap' | 'ts'
+   * @param {number} limit - maximum number of articles to return
+   * @returns {Promise<object[]>} processed state news articles
    */
-  function _buildFetchJobs(stateKey) {
+  async function _fetchStateNews(stateKey, limit = 25) {
     const q = stateKey === 'ap'
       ? 'andhra pradesh OR visakhapatnam OR vijayawada OR amaravati'
       : 'telangana OR hyderabad OR warangal OR karimnagar';
 
-    return [
-      // 1 keyword-boosted call (highest relevance)
-      { category: 'top',      query: q },
-      // 1 politics-specific call
-      { category: 'politics', query: q },
-      // 1 broad call to catch uncategorized articles
-      { category: '',         query: q },
-    ];
+    const rawPool   = [];
+    const seenLinks = new Set();
+    let creditsUsed = 0;
+
+    /**
+     * Deduplicate items into rawPool.
+     * Writes to _seen immediately so the cross-state dedup Set stays
+     * consistent even when AP and TS run concurrently via Promise.allSettled.
+     * Does NOT filter by confidence here — _filterAndMap handles that
+     * in a single pass together with mapping and NLP clustering.
+     */
+    function _collectItems(items) {
+      for (const item of items) {
+        const key = item.link || item.title || '';
+        if (!key || seenLinks.has(key) || _seen.has(key)) continue;
+        seenLinks.add(key);
+        _seen.add(key);
+        rawPool.push(item);
+      }
+    }
+
+    /** Wrap _fetch so failures don't reject the whole Promise.all batch. */
+    function _safeFetch(cat, pageToken) {
+      return _fetch(cat, q, pageToken)
+        .then(r  => ({ cat, results: r.results, nextPage: r.nextPage, ok: true }))
+        .catch(e => {
+          console.error(`[StateNewsService] ${stateKey.toUpperCase()} fetch failed for ${cat}:`, e.message);
+          return { cat, results: [], nextPage: '', ok: false };
+        });
+    }
+
+    // ── Phase 1: all categories, first page, in parallel ──────────
+    const phase1 = await Promise.all(
+      STATE_FETCH_CATEGORIES.map(cat => _safeFetch(cat, ''))
+    );
+
+    let paginatable = [];          // { cat, pageToken } for categories with more pages
+    for (const r of phase1) {
+      if (r.ok) creditsUsed++;
+      _collectItems(r.results);
+      if (r.nextPage) paginatable.push({ cat: r.cat, pageToken: r.nextPage });
+    }
+
+    // Run _filterAndMap once to get the clustered article count
+    let articles = _filterAndMap(rawPool, stateKey);
+
+    // ── Phase 2: paginate only if clustered count is under the limit ─
+    while (articles.length < limit && paginatable.length > 0) {
+      if (!_getActiveKey()) break;
+
+      // Fire all pending next-pages in one parallel batch
+      const batch = paginatable.splice(0);   // drain current list
+      const phase2 = await Promise.all(
+        batch.map(({ cat, pageToken }) => _safeFetch(cat, pageToken))
+      );
+
+      for (const r of phase2) {
+        if (r.ok) creditsUsed++;
+        _collectItems(r.results);
+        if (r.nextPage) {
+          paginatable.push({ cat: r.cat, pageToken: r.nextPage });
+        }
+      }
+
+      // Re-cluster the full pool to get accurate count
+      articles = _filterAndMap(rawPool, stateKey);
+    }
+
+    console.log(`[StateNewsService] ${stateKey.toUpperCase()}: ${articles.length} articles (${creditsUsed} credits used).`);
+    return articles.slice(0, limit);
   }
 
   /* ── PUBLIC METHODS ────────────────────────────────────────────── */
@@ -560,6 +628,8 @@ const StateNewsService = (() => {
     _cache = { ap: [], ts: [] };
     _seen.clear();
     _stateIdCounter = 10000;
+    _loadingAP = false;
+    _loadingTS = false;
     console.log(`[StateNewsService] Initialised with ${_keys.length} key(s).`);
   }
 
@@ -567,7 +637,7 @@ const StateNewsService = (() => {
    * Fetch and process Andhra Pradesh news.
    * Returns structured StateNewsArticle[] for AP.
    *
-   * Credit cost: up to 3 API calls.
+   * Credit cost: up to 5 API calls.
    */
   async function fetchAP() {
     if (_loadingAP) {
@@ -577,35 +647,20 @@ const StateNewsService = (() => {
     if (!_getActiveKey()) throw new Error('[StateNewsService] No API keys available.');
 
     _loadingAP = true;
-    const rawPool  = [];
-    const jobs     = _buildFetchJobs('ap');
-    let creditsUsed = 0;
-
-    for (const job of jobs) {
-      if (!_getActiveKey()) break;
-      try {
-        const items = await _fetch(job.category, job.query);
-        rawPool.push(...items);
-        creditsUsed++;
-      } catch (err) {
-        console.error(`[StateNewsService] AP fetch job failed (cat=${job.category}):`, err.message);
-        if (!_getActiveKey()) break;
-      }
+    try {
+      const articles = await _fetchStateNews('ap', 25);
+      _cache.ap = articles;
+      return articles;
+    } finally {
+      _loadingAP = false;
     }
-
-    const articles    = _filterAndMap(rawPool, 'ap');
-    _cache.ap         = articles;
-    _loadingAP        = false;
-
-    console.log(`[StateNewsService] AP: ${articles.length} articles (${creditsUsed} credits used).`);
-    return articles;
   }
 
   /**
    * Fetch and process Telangana news.
    * Returns structured StateNewsArticle[] for TS.
    *
-   * Credit cost: up to 3 API calls.
+   * Credit cost: up to 5 API calls.
    */
   async function fetchTS() {
     if (_loadingTS) {
@@ -615,33 +670,18 @@ const StateNewsService = (() => {
     if (!_getActiveKey()) throw new Error('[StateNewsService] No API keys available.');
 
     _loadingTS = true;
-    const rawPool = [];
-    const jobs    = _buildFetchJobs('ts');
-    let creditsUsed = 0;
-
-    for (const job of jobs) {
-      if (!_getActiveKey()) break;
-      try {
-        const items = await _fetch(job.category, job.query);
-        rawPool.push(...items);
-        creditsUsed++;
-      } catch (err) {
-        console.error(`[StateNewsService] TS fetch job failed (cat=${job.category}):`, err.message);
-        if (!_getActiveKey()) break;
-      }
+    try {
+      const articles = await _fetchStateNews('ts', 25);
+      _cache.ts = articles;
+      return articles;
+    } finally {
+      _loadingTS = false;
     }
-
-    const articles = _filterAndMap(rawPool, 'ts');
-    _cache.ts      = articles;
-    _loadingTS     = false;
-
-    console.log(`[StateNewsService] TS: ${articles.length} articles (${creditsUsed} credits used).`);
-    return articles;
   }
 
   /**
    * Fetch both states concurrently.
-   * Returns { ap: StateNewsArticle[], ts: StateNewsArticle[] }
+   * Returns { ap: { status, value, error }, ts: { status, value, error } }
    *
    * Credit cost: up to 6 API calls total.
    */
@@ -649,12 +689,16 @@ const StateNewsService = (() => {
     const [ap, ts] = await Promise.allSettled([fetchAP(), fetchTS()]);
 
     return {
-      ap: ap.status === 'fulfilled' ? ap.value : [],
-      ts: ts.status === 'fulfilled' ? ts.value : [],
-      errors: [
-        ap.status === 'rejected' ? ap.reason?.message : null,
-        ts.status === 'rejected' ? ts.reason?.message : null,
-      ].filter(Boolean),
+      ap: {
+        status: ap.status,
+        value: ap.status === 'fulfilled' ? ap.value : [],
+        error: ap.status === 'rejected' ? ap.reason?.message : null
+      },
+      ts: {
+        status: ts.status,
+        value: ts.status === 'fulfilled' ? ts.value : [],
+        error: ts.status === 'rejected' ? ts.reason?.message : null
+      }
     };
   }
 
@@ -675,6 +719,8 @@ const StateNewsService = (() => {
     _cache = { ap: [], ts: [] };
     _seen.clear();
     _stateIdCounter = 10000;
+    _loadingAP = false;
+    _loadingTS = false;
     console.log('[StateNewsService] Cache cleared.');
   }
 
@@ -743,3 +789,4 @@ if (typeof module !== 'undefined' && module.exports) {
   // Browser global
   window.StateNewsService = StateNewsService;
 }
+
